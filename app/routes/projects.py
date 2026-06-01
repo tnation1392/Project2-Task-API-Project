@@ -11,6 +11,16 @@ def create_project(
     project: ProjectCreate,
     current_user: dict = Depends(get_current_user),
 ):
+    for existing_project in projects_db.values():
+        if (
+            existing_project["owner_id"] == current_user["id"]
+            and existing_project["name"].lower() == project.name.lower()
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Project name already exists for this user"
+            )
+
     project_id = str(uuid.uuid4())
 
     new_project = {

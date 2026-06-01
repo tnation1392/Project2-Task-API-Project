@@ -22,6 +22,16 @@ def create_task(
     if project["owner_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
+    for existing_task in tasks_db.values():
+        if (
+            existing_task["project_id"] == project_id
+            and existing_task["title"].lower() == task.title.lower()
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Task title already exists in this project"
+            )
+
     task_id = str(uuid.uuid4())
 
     new_task = {
@@ -34,7 +44,6 @@ def create_task(
     tasks_db[task_id] = new_task
 
     return new_task
-
 
 @router.get("/projects/{project_id}")
 def get_tasks(project_id: str, current_user: dict = Depends(get_current_user)):

@@ -101,3 +101,87 @@ async def test_projects_require_auth(client):
     res = await client.get("/projects/")
 
     assert res.status_code == 401
+
+@pytest.mark.asyncio
+async def test_cannot_create_duplicate_project_name_for_same_user(client, auth_headers):
+    first_response = await client.post(
+        "/projects/",
+        json={"name": "Duplicate Project"},
+        headers=auth_headers
+    )
+    assert first_response.status_code == 200
+
+    second_response = await client.post(
+        "/projects/",
+        json={"name": "Duplicate Project"},
+        headers=auth_headers
+    )
+
+    assert second_response.status_code == 409
+    assert second_response.json()["detail"] == "Project name already exists for this user"
+
+@pytest.mark.asyncio
+async def test_create_project_whitespace_only_name(client, auth_headers):
+    response = await client.post(
+        "/projects/",
+        json={"name": "   "},
+        headers=auth_headers
+    )
+
+    assert response.status_code == 422
+
+@pytest.mark.asyncio
+async def test_different_users_can_create_same_project_name(client):
+    # User A
+    res_a = await client.post("/users/", json={"name": "User A"})
+    user_a = res_a.json()
+    headers_a = {"x-api-key": user_a["api_key"]}
+
+    # User B
+    res_b = await client.post("/users/", json={"name": "User B"})
+    user_b = res_b.json()
+    headers_b = {"x-api-key": user_b["api_key"]}
+
+    # Both create a project with the same name
+    res1 = await client.post(
+        "/projects/",
+        json={"name": "Shared Name"},
+        headers=headers_a
+    )
+    res2 = await client.post(
+        "/projects/",
+        json={"name": "Shared Name"},
+        headers=headers_b
+    )
+
+    assert res1.status_code == 200
+    assert res2.status_code == 200
+
+@pytest.mark.asyncio
+async def test_different_users_can_create_same_project_name(client):
+    # Create User A
+    res_a = await client.post("/users/", json={"name": "User A"})
+    user_a = res_a.json()
+    headers_a = {"x-api-key": user_a["api_key"]}
+
+    # Create User B
+    res_b = await client.post("/users/", json={"name": "User B"})
+    user_b = res_b.json()
+    headers_b = {"x-api-key": user_b["api_key"]}
+
+    # User A creates a project
+    res1 = await client.post(
+        "/projects/",
+        json={"name": "Shared Name"},
+        headers=headers_a
+    )
+
+    # User B creates a project with the same name
+    res2 = await client.post(
+        "/projects/",
+        json={"name": "Shared Name"},
+        headers=headers_b
+    )
+
+    assert res1.status_code == 200
+    assert res2.status_code == 200

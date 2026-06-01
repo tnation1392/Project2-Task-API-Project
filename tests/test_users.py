@@ -81,3 +81,9 @@ async def test_missing_api_key(client):
     response = await client.get("/users/")
 
     assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_create_user_whitespace_only_name(client):
+    response = await client.post("/users/", json={"name": "   "})
+
+    assert response.status_code == 422

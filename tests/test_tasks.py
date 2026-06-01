@@ -293,3 +293,76 @@ async def test_update_task_invalid_transition_done_to_todo(client, auth_headers)
 
     assert invalid_update.status_code == 409
     assert "Invalid status transition" in invalid_update.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_create_task_whitespace_only_title(client, auth_headers):
+    project_res = await client.post(
+        "/projects/",
+        json={"name": "Validation Project"},
+        headers=auth_headers
+    )
+    project_id = project_res.json()["id"]
+
+    response = await client.post(
+        f"/tasks/projects/{project_id}",
+        json={"title": "   "},
+        headers=auth_headers
+    )
+
+    assert response.status_code == 422
+
+@pytest.mark.asyncio
+async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_headers):
+    project_res = await client.post(
+        "/projects/",
+        json={"name": "Task Validation Project"},
+        headers=auth_headers
+    )
+    project_id = project_res.json()["id"]
+
+    first_response = await client.post(
+        f"/tasks/projects/{project_id}",
+        json={"title": "Duplicate Task"},
+        headers=auth_headers
+    )
+    assert first_response.status_code == 200
+
+    second_response = await client.post(
+        f"/tasks/projects/{project_id}",
+        json={"title": "Duplicate Task"},
+        headers=auth_headers
+    )
+
+    assert second_response.status_code == 409
+    assert second_response.json()["detail"] == "Task title already exists in this project"
+
+@pytest.mark.asyncio
+async def test_same_task_title_allowed_in_different_projects(client, auth_headers):
+    project_res_1 = await client.post(
+        "/projects/",
+        json={"name": "Project One"},
+        headers=auth_headers
+    )
+    project_id_1 = project_res_1.json()["id"]
+
+    project_res_2 = await client.post(
+        "/projects/",
+        json={"name": "Project Two"},
+        headers=auth_headers
+    )
+    project_id_2 = project_res_2.json()["id"]
+
+    res1 = await client.post(
+        f"/tasks/projects/{project_id_1}",
+        json={"title": "Shared Task Name"},
+        headers=auth_headers
+    )
+    res2 = await client.post(
+        f"/tasks/projects/{project_id_2}",
+        json={"title": "Shared Task Name"},
+        headers=auth_headers
+    )
+
+    assert res1.status_code == 200
+    assert res2.status_code == 200
+
