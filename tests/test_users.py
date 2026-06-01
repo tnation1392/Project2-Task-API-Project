@@ -1,4 +1,5 @@
 import pytest
+from tests.helpers import create_user, build_auth_headers
 
 @pytest.mark.asyncio
 async def test_create_user(client):
@@ -46,25 +47,18 @@ async def test_get_users_success(client, auth_headers):
 
 @pytest.mark.asyncio
 async def test_user_lifecycle(client):
-    # Create user
-    create_res = await client.post("/users/", json={"name": "Lifecycle User"})
-    assert create_res.status_code == 200
-    user = create_res.json()
+    user = await create_user(client, name="Lifecycle User")
+    headers = build_auth_headers(user)
 
-    headers = {"x-api-key": user["api_key"]}
-
-    # Get users
     get_res = await client.get("/users/", headers=headers)
     assert get_res.status_code == 200
 
     users = get_res.json()
     assert any(u["id"] == user["id"] for u in users)
 
-    # Delete user
     delete_res = await client.delete(f"/users/{user['id']}", headers=headers)
     assert delete_res.status_code == 200
 
-    # Verify deleted
     get_res = await client.get(f"/users/{user['id']}", headers=headers)
     assert get_res.status_code == 401
 

@@ -1,5 +1,5 @@
 import pytest
-
+from tests.helpers import create_user, build_auth_headers, create_project, create_task
 
 @pytest.mark.asyncio
 async def test_create_task(client, auth_headers):
@@ -87,33 +87,25 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_update_task_status(client, auth_headers):
-    project_res = await client.post(
-        "/projects/",
-        json={"name": "Update Project"},
-        headers=auth_headers
-    )
-    project_id = project_res.json()["id"]
+async def test_update_task_status(client):
+    user = await create_user(client, name="Task Owner")
+    headers = build_auth_headers(user)
 
-    task_res = await client.post(
-        f"/tasks/projects/{project_id}",
-        json={"title": "Task"},
-        headers=auth_headers
-    )
-    task_id = task_res.json()["id"]
+    project = await create_project(client, headers, name="Update Project")
+    task = await create_task(client, headers, project["id"], title="Task")
 
     first_update = await client.patch(
-        f"/tasks/{task_id}",
+        f"/tasks/{task['id']}",
         json={"status": "in_progress"},
-        headers=auth_headers
+        headers=headers
     )
     assert first_update.status_code == 200
     assert first_update.json()["status"] == "in_progress"
 
     second_update = await client.patch(
-        f"/tasks/{task_id}",
+        f"/tasks/{task['id']}",
         json={"status": "done"},
-        headers=auth_headers
+        headers=headers
     )
     assert second_update.status_code == 200
     assert second_update.json()["status"] == "done"
@@ -171,27 +163,18 @@ async def test_delete_task(client, auth_headers):
 
 import pytest
 
-
 @pytest.mark.asyncio
-async def test_update_task_valid_transition_to_in_progress(client, auth_headers):
-    project_res = await client.post(
-        "/projects/",
-        json={"name": "Workflow Project"},
-        headers=auth_headers
-    )
-    project_id = project_res.json()["id"]
+async def test_update_task_valid_transition_to_in_progress(client):
+    user = await create_user(client, name="Task Owner")
+    headers = build_auth_headers(user)
 
-    task_res = await client.post(
-        f"/tasks/projects/{project_id}",
-        json={"title": "Workflow Task"},
-        headers=auth_headers
-    )
-    task_id = task_res.json()["id"]
+    project = await create_project(client, headers, name="Workflow Project")
+    task = await create_task(client, headers, project["id"], title="Workflow Task")
 
     update_res = await client.patch(
-        f"/tasks/{task_id}",
+        f"/tasks/{task['id']}",
         json={"status": "in_progress"},
-        headers=auth_headers
+        headers=headers
     )
 
     assert update_res.status_code == 200

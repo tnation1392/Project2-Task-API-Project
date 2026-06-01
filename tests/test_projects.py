@@ -1,5 +1,5 @@
 import pytest
-
+from tests.helpers import create_user, build_auth_headers, create_project
 
 @pytest.mark.asyncio
 async def test_create_project(client, auth_headers):
@@ -83,17 +83,17 @@ async def test_get_nonexistent_project(client, auth_headers):
     assert res.status_code == 404
 
 @pytest.mark.asyncio
-async def test_delete_project(client, auth_headers):
-    # Create project
-    res = await client.post("/projects/", json={"name": "Delete Me"}, headers=auth_headers)
-    project_id = res.json()["id"]
+async def test_delete_project(client):
+    user = await create_user(client, name="Project Owner")
+    headers = build_auth_headers(user)
 
-    # Delete it
-    delete_res = await client.delete(f"/projects/{project_id}", headers=auth_headers)
+    project = await create_project(client, headers, name="Delete Me")
+    project_id = project["id"]
+
+    delete_res = await client.delete(f"/projects/{project_id}", headers=headers)
     assert delete_res.status_code == 200
 
-    # Verify it's gone
-    get_res = await client.get(f"/projects/{project_id}", headers=auth_headers)
+    get_res = await client.get(f"/projects/{project_id}", headers=headers)
     assert get_res.status_code == 404
 
 @pytest.mark.asyncio
