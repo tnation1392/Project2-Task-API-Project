@@ -5,3 +5,4 @@ pytest-asyncio
 httpx
 pytest-cov
 pytest-html
+sqlalchemy
