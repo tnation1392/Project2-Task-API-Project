@@ -18,12 +18,14 @@ class Project(Base):
     id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
     owner_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
     updated_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
-        nullable=False
+        nullable=False,
     )
 
 
@@ -34,10 +36,12 @@ class Task(Base):
     title = Column(String, nullable=False, index=True)
     status = Column(String, nullable=False, index=True)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
     updated_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
-        nullable=False
+        nullable=False,
     )

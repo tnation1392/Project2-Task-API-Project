@@ -30,10 +30,7 @@ async def auth_user(client):
     response = await client.post("/users/", json={"name": "Test User"})
     data = response.json()
 
-    return {
-        "user_id": data["id"],
-        "api_key": data["api_key"]
-    }
+    return {"user_id": data["id"], "api_key": data["api_key"]}
 
 
 @pytest.fixture

@@ -25,15 +25,15 @@ def create_task(
     if not is_admin(current_user) and project.owner_id != current_user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    existing_task = db.query(Task).filter(
-        Task.project_id == project_id,
-        Task.title.ilike(task.title)
-    ).first()
+    existing_task = (
+        db.query(Task)
+        .filter(Task.project_id == project_id, Task.title.ilike(task.title))
+        .first()
+    )
 
     if existing_task:
         raise HTTPException(
-            status_code=409,
-            detail="Task title already exists in this project"
+            status_code=409, detail="Task title already exists in this project"
         )
 
     task_id = str(uuid.uuid4())

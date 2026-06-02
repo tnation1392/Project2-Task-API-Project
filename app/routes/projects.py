@@ -15,15 +15,17 @@ def create_project(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    existing_project = db.query(Project).filter(
-        Project.owner_id == current_user["id"],
-        Project.name.ilike(project.name)
-    ).first()
+    existing_project = (
+        db.query(Project)
+        .filter(
+            Project.owner_id == current_user["id"], Project.name.ilike(project.name)
+        )
+        .first()
+    )
 
     if existing_project:
         raise HTTPException(
-            status_code=409,
-            detail="Project name already exists for this user"
+            status_code=409, detail="Project name already exists for this user"
         )
 
     project_id = str(uuid.uuid4())
@@ -55,7 +57,9 @@ def get_projects(
     if is_admin(current_user):
         projects = db.query(Project).all()
     else:
-        projects = db.query(Project).filter(Project.owner_id == current_user["id"]).all()
+        projects = (
+            db.query(Project).filter(Project.owner_id == current_user["id"]).all()
+        )
 
     return [
         {

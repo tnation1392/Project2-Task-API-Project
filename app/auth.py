@@ -9,10 +9,7 @@ def generate_api_key():
     return str(uuid.uuid4())
 
 
-def get_current_user(
-    x_api_key: str = Header(None),
-    db: Session = Depends(get_db)
-):
+def get_current_user(x_api_key: str = Header(None), db: Session = Depends(get_db)):
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key missing")
 
@@ -25,7 +22,7 @@ def get_current_user(
         "id": user.id,
         "name": user.name,
         "api_key": user.api_key,
-        "role": user.role
+        "role": user.role,
     }
 
 

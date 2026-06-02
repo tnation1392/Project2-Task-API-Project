@@ -33,14 +33,12 @@ class ProjectCreate(BaseModel):
         return value.strip()
 
 
-
 class ProjectResponse(BaseModel):
     id: str
     name: str
     owner_id: str
     created_at: datetime
     updated_at: datetime
-
 
 
 class TaskCreate(BaseModel):
@@ -54,7 +52,6 @@ class TaskCreate(BaseModel):
         return value.strip()
 
 
-
 class TaskResponse(BaseModel):
     id: str
     title: str
@@ -62,7 +59,6 @@ class TaskResponse(BaseModel):
     project_id: str
     created_at: datetime
     updated_at: datetime
-
 
 
 class TaskUpdate(BaseModel):

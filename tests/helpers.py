@@ -9,20 +9,14 @@ def build_auth_headers(user_data):
 
 
 async def create_project(client, headers, name="Test Project"):
-    response = await client.post(
-        "/projects/",
-        json={"name": name},
-        headers=headers
-    )
+    response = await client.post("/projects/", json={"name": name}, headers=headers)
     assert response.status_code == 200
     return response.json()
 
 
 async def create_task(client, headers, project_id, title="Test Task"):
     response = await client.post(
-        f"/tasks/projects/{project_id}",
-        json={"title": title},
-        headers=headers
+        f"/tasks/projects/{project_id}", json={"title": title}, headers=headers
     )
     assert response.status_code == 200
     return response.json()

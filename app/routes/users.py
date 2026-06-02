@@ -14,12 +14,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user_id = str(uuid.uuid4())
     api_key = generate_api_key()
 
-    new_user = User(
-        id=user_id,
-        name=user.name,
-        api_key=api_key,
-        role=user.role
-    )
+    new_user = User(id=user_id, name=user.name, api_key=api_key, role=user.role)
 
     db.add(new_user)
     db.commit()
@@ -29,32 +24,27 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         "id": new_user.id,
         "name": new_user.name,
         "api_key": new_user.api_key,
-        "role": new_user.role
+        "role": new_user.role,
     }
 
 
 @router.get("/")
 def get_users(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
 
     return [
-        {
-            "id": user.id,
-            "name": user.name,
-            "api_key": user.api_key,
-            "role": user.role
-        }
+        {"id": user.id, "name": user.name, "api_key": user.api_key, "role": user.role}
         for user in users
     ]
+
 
 @router.get("/{user_id}")
 def get_user(
     user_id: str,
     current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.id == user_id).first()
 
@@ -65,14 +55,15 @@ def get_user(
         "id": user.id,
         "name": user.name,
         "api_key": user.api_key,
-        "role": user.role
+        "role": user.role,
     }
+
 
 @router.delete("/{user_id}")
 def delete_user(
     user_id: str,
     current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.id == user_id).first()
 
