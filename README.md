@@ -115,6 +115,28 @@ task_api.db
 docker build -t project2-task-api-project .
 ### Documentation```
 ```
+
+--- 
+
+## Docker Status
+
+Docker support was investigated as part of the project roadmap.
+
+### Current local limitation
+Local Docker validation is currently blocked on my Windows work environment because:
+- Docker Desktop on Windows uses WSL 2 for the recommended per-user installation path
+- WSL is not available on this machine
+- I do not have administrative permissions to enable/install the required backend
+
+### Project impact
+This does not affect the API implementation or the automated test suite when run locally with Python and pytest.
+
+### Planned follow-up
+Docker assets can be completed and validated later on:
+- a personal machine
+- an admin-enabled environment
+- or another environment where WSL 2 / Docker Desktop is available
+
 ---
 
 ## Testing Strategy
