@@ -69,7 +69,7 @@ async def test_openapi_schema_includes_api_key_security_metadata():
             for operation in paths[path].values()
             if isinstance(operation, dict)
         )
-        assert operation_security_found, (
-            f"No OpenAPI security metadata found for protected path: {path}"
-        )
+        assert (
+            operation_security_found
+        ), f"No OpenAPI security metadata found for protected path: {path}"
     print(paths["/projects/"])
