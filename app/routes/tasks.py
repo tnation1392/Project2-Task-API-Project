@@ -62,6 +62,8 @@ def create_task(
 @router.get("/projects/{project_id}")
 def get_tasks(
     project_id: str,
+    status: str | None = None,
+    title: str | None = None,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -73,7 +75,15 @@ def get_tasks(
     if project.owner_id != current_user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    query = db.query(Task).filter(Task.project_id == project_id)
+
+    if status:
+        query = query.filter(Task.status == status)
+
+    if title:
+        query = query.filter(Task.title.ilike(f"%{title}%"))
+
+    tasks = query.all()
 
     return [
         {

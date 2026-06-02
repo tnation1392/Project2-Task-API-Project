@@ -405,3 +405,113 @@ async def test_update_task_changes_updated_at(client):
 
     assert new_created_at == original_created_at
     assert new_updated_at > original_updated_at
+
+    @pytest.mark.asyncio
+    async def test_get_tasks_filter_by_status(client):
+        from tests.helpers import create_user, build_auth_headers, create_project, create_task
+
+        user = await create_user(client, name="Filter User")
+        headers = build_auth_headers(user)
+        project = await create_project(client, headers, name="Filter Project")
+
+        task1 = await create_task(client, headers, project["id"], title="Task One")
+        task2 = await create_task(client, headers, project["id"], title="Task Two")
+
+        await client.patch(
+            f"/tasks/{task2['id']}",
+            json={"status": "in_progress"},
+            headers=headers
+        )
+
+        response = await client.get(
+            f"/tasks/projects/{project['id']}?status=in_progress",
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["title"] == "Task Two"
+        assert data[0]["status"] == "in_progress"
+
+@pytest.mark.asyncio
+async def test_get_tasks_filter_by_title_partial_match(client):
+    from tests.helpers import create_user, build_auth_headers, create_project, create_task
+
+    user = await create_user(client, name="Search User")
+    headers = build_auth_headers(user)
+    project = await create_project(client, headers, name="Search Project")
+
+    await create_task(client, headers, project["id"], title="Fix login bug")
+    await create_task(client, headers, project["id"], title="Write API tests")
+    await create_task(client, headers, project["id"], title="Login validation review")
+
+    response = await client.get(
+        f"/tasks/projects/{project['id']}?title=login",
+        headers=headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == 2
+    returned_titles = [task["title"] for task in data]
+
+    assert "Fix login bug" in returned_titles
+    assert "Login validation review" in returned_titles
+
+@pytest.mark.asyncio
+async def test_get_tasks_filter_by_status_and_title(client):
+    from tests.helpers import create_user, build_auth_headers, create_project, create_task
+
+    user = await create_user(client, name="Combined Filter User")
+    headers = build_auth_headers(user)
+    project = await create_project(client, headers, name="Combined Filter Project")
+
+    task1 = await create_task(client, headers, project["id"], title="Bug review")
+    task2 = await create_task(client, headers, project["id"], title="Bug fix")
+    await create_task(client, headers, project["id"], title="Documentation update")
+
+    await client.patch(
+        f"/tasks/{task1['id']}",
+        json={"status": "in_progress"},
+        headers=headers
+    )
+
+    await client.patch(
+        f"/tasks/{task2['id']}",
+        json={"status": "in_progress"},
+        headers=headers
+    )
+
+    response = await client.get(
+        f"/tasks/projects/{project['id']}?status=in_progress&title=fix",
+        headers=headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Bug fix"
+    assert data[0]["status"] == "in_progress"
+
+@pytest.mark.asyncio
+async def test_get_tasks_filter_returns_empty_list_when_no_match(client):
+    from tests.helpers import create_user, build_auth_headers, create_project, create_task
+
+    user = await create_user(client, name="Empty Filter User")
+    headers = build_auth_headers(user)
+    project = await create_project(client, headers, name="Empty Filter Project")
+
+    await create_task(client, headers, project["id"], title="Alpha task")
+    await create_task(client, headers, project["id"], title="Beta task")
+
+    response = await client.get(
+        f"/tasks/projects/{project['id']}?title=gamma",
+        headers=headers
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
