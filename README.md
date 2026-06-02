@@ -108,6 +108,14 @@ task_api.db
 ```
 ---
 
-### Documentation
+## 🐳 Running with Docker
 
-[Testing Strategy] (docx/testing-strategy.md)
+### Build the image
+```bash
+docker build -t project2-task-api-project .
+### Documentation```
+```
+---
+
+## Testing Strategy
+(docx/testing-strategy.md)

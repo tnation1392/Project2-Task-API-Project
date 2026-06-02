@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  task-api:
+    build: .
+    container_name: task-api-container
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
