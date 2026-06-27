@@ -7,10 +7,11 @@ from app.auth import get_current_user, is_admin
 from app.rules import validate_task_transition
 import uuid
 
-#Setting router for tasks
+# Setting router for tasks
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-#Function to create a task
+
+# Function to create a task
 @router.post("/projects/{project_id}", response_model=TaskResponse)
 def create_task(
     project_id: str,
@@ -59,7 +60,8 @@ def create_task(
         "updated_at": new_task.updated_at,
     }
 
-#Function to get an individual task by project_id
+
+# Function to get an individual task by project_id
 @router.get("/projects/{project_id}")
 def get_tasks(
     project_id: str,
@@ -101,7 +103,8 @@ def get_tasks(
         for task in tasks
     ]
 
-#Function to update a task
+
+# Function to update a task
 @router.patch("/{task_id}")
 def update_task(
     task_id: str,
@@ -137,7 +140,8 @@ def update_task(
         "updated_at": task.updated_at,
     }
 
-#Function to delete a task
+
+# Function to delete a task
 @router.delete("/{task_id}")
 def delete_task(
     task_id: str,

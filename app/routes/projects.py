@@ -6,10 +6,11 @@ from app.schemas import ProjectCreate, ProjectResponse
 from app.auth import get_current_user, is_admin
 import uuid
 
-#Setting the router for projects
+# Setting the router for projects
 router = APIRouter(prefix="/projects", tags=["projects"])
 
-#Function to create a project
+
+# Function to create a project
 @router.post("/", response_model=ProjectResponse)
 def create_project(
     project: ProjectCreate,
@@ -49,7 +50,8 @@ def create_project(
         "updated_at": new_project.updated_at,
     }
 
-#Function to create project
+
+# Function to create project
 @router.get("/")
 def get_projects(
     current_user: dict = Depends(get_current_user),
@@ -73,7 +75,8 @@ def get_projects(
         for project in projects
     ]
 
-#Function to get an individual project based off project_id
+
+# Function to get an individual project based off project_id
 @router.get("/{project_id}")
 def get_project(
     project_id: str,
@@ -96,7 +99,8 @@ def get_project(
         "updated_at": project.updated_at,
     }
 
-#Function to delete project
+
+# Function to delete project
 @router.delete("/{project_id}")
 def delete_project(
     project_id: str,

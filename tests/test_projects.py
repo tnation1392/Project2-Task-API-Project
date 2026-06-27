@@ -5,7 +5,7 @@ from datetime import datetime
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
-#Smoke test to show that create_project returns id, name, and owner_id
+# Smoke test to show that create_project returns id, name, and owner_id
 async def test_create_project(client, auth_headers):
     response = await client.post(
         "/projects/", json={"name": "Test Project"}, headers=auth_headers
@@ -22,7 +22,7 @@ async def test_create_project(client, auth_headers):
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
-#Smoke test showing that users can only see their projects
+# Smoke test showing that users can only see their projects
 async def test_get_projects_returns_only_user_projects(client, auth_user, auth_headers):
     # Create project for this user
     await client.post("/projects/", json={"name": "Project A"}, headers=auth_headers)
@@ -31,14 +31,14 @@ async def test_get_projects_returns_only_user_projects(client, auth_user, auth_h
 
     assert response.status_code == 200
 
-    #Assert the resulting json
+    # Assert the resulting json
     projects = response.json()
     assert len(projects) == 1
     assert projects[0]["name"] == "Project A"
 
 
 @pytest.mark.asyncio
-#Test to show User B's project list is empty, and they cannot see User A's projects
+# Test to show User B's project list is empty, and they cannot see User A's projects
 async def test_users_cannot_see_each_others_projects(client):
     # User A
     res_a = await client.post("/users/", json={"name": "User A"})
@@ -62,7 +62,7 @@ async def test_users_cannot_see_each_others_projects(client):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
-#Regression test for showing direct access by non-owner returns a 403 Forbidden error
+# Regression test for showing direct access by non-owner returns a 403 Forbidden error
 async def test_cannot_access_other_users_project(client):
     # Create User A
     res_a = await client.post("/users/", json={"name": "User A"})
@@ -87,7 +87,7 @@ async def test_cannot_access_other_users_project(client):
 
 
 @pytest.mark.asyncio
-#Test to show that a nonexistent project returns a 404 Not Found error
+# Test to show that a nonexistent project returns a 404 Not Found error
 async def test_get_nonexistent_project(client, auth_headers):
     res = await client.get("/projects/nonexistent-id", headers=auth_headers)
 
@@ -96,7 +96,7 @@ async def test_get_nonexistent_project(client, auth_headers):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
-#Test to remove a project and the GET after returns a 404 error
+# Test to remove a project and the GET after returns a 404 error
 async def test_delete_project(client):
     user = await create_user(client, name="Project Owner")
     headers = build_auth_headers(user)
@@ -112,7 +112,7 @@ async def test_delete_project(client):
 
 
 @pytest.mark.asyncio
-#Test for GET /projects/ without an API key returns a 401 unauthorized
+# Test for GET /projects/ without an API key returns a 401 unauthorized
 async def test_projects_require_auth(client):
     res = await client.get("/projects/")
 
@@ -121,7 +121,7 @@ async def test_projects_require_auth(client):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
-#Regression test showing project names must be unique per user, dup returns 409 error
+# Regression test showing project names must be unique per user, dup returns 409 error
 async def test_cannot_create_duplicate_project_name_for_same_user(client, auth_headers):
     first_response = await client.post(
         "/projects/", json={"name": "Duplicate Project"}, headers=auth_headers
@@ -139,7 +139,7 @@ async def test_cannot_create_duplicate_project_name_for_same_user(client, auth_h
 
 
 @pytest.mark.asyncio
-#Test showing whitespace-only project names return a 422 error
+# Test showing whitespace-only project names return a 422 error
 async def test_create_project_whitespace_only_name(client, auth_headers):
     response = await client.post(
         "/projects/", json={"name": "   "}, headers=auth_headers
@@ -149,7 +149,7 @@ async def test_create_project_whitespace_only_name(client, auth_headers):
 
 
 @pytest.mark.asyncio
-#Test showing project name uniqueness is per user, not global
+# Test showing project name uniqueness is per user, not global
 async def test_different_users_can_create_same_project_name(client):
     # User A
     res_a = await client.post("/users/", json={"name": "User A"})
@@ -172,8 +172,9 @@ async def test_different_users_can_create_same_project_name(client):
     assert res1.status_code == 200
     assert res2.status_code == 200
 
+
 @pytest.mark.asyncio
-#Test for showing created projects include created_at and updated_at
+# Test for showing created projects include created_at and updated_at
 async def test_create_project_includes_timestamps(client):
     from tests.helpers import create_user, build_auth_headers
 
@@ -197,7 +198,7 @@ async def test_create_project_includes_timestamps(client):
 
 
 @pytest.mark.asyncio
-#Test for showing admin users can view and access any project
+# Test for showing admin users can view and access any project
 async def test_admin_can_view_other_users_project(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
@@ -218,7 +219,7 @@ async def test_admin_can_view_other_users_project(client):
 
 
 @pytest.mark.asyncio
-#Test that admin can see all projects
+# Test that admin can see all projects
 async def test_admin_can_see_all_projects(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 

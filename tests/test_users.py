@@ -4,21 +4,21 @@ from tests.helpers import create_user, build_auth_headers
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
-#Smoke test to verify user creation works and returns id, name and API key
+# Smoke test to verify user creation works and returns id, name and API key
 async def test_create_user(client):
     response = await client.post("/users/", json={"name": "Todd"})
 
     assert response.status_code == 200
 
     data = response.json()
-    #Multiple asserts
+    # Multiple asserts
     assert isinstance(data["id"], str)
     assert data["name"] == "Todd"
     assert isinstance(data["api_key"], str)
 
 
 @pytest.mark.asyncio
-#Test to validate that a name shorter than three characters are rejected
+# Test to validate that a name shorter than three characters are rejected
 async def test_create_user_invalid_name(client):
     response = await client.post("/users/", json={"name": "To"})
 
@@ -30,7 +30,7 @@ async def test_create_user_invalid_name(client):
 @pytest.mark.parametrize(
     "invalid_name", ["To", "", "a" * 100]  # too short  # empty  # too long
 )
-#Regression test to show that names must be 3-50 characters long and not empty when trimmed
+# Regression test to show that names must be 3-50 characters long and not empty when trimmed
 async def test_create_user_invalid_inputs(client, invalid_name):
     response = await client.post("/users/", json={"name": invalid_name})
 
@@ -38,7 +38,7 @@ async def test_create_user_invalid_inputs(client, invalid_name):
 
 
 @pytest.mark.asyncio
-#Test to show that GET /users/ without an API key draws a 401 error
+# Test to show that GET /users/ without an API key draws a 401 error
 async def test_get_users_requires_auth(client):
     response = await client.get("/users/")
 
@@ -47,7 +47,7 @@ async def test_get_users_requires_auth(client):
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
-#Smoke test for showing GET /users/ with valid auth returns 200 and a list of users
+# Smoke test for showing GET /users/ with valid auth returns 200 and a list of users
 async def test_get_users_success(client, auth_headers):
     response = await client.get("/users/", headers=auth_headers)
 
@@ -57,7 +57,7 @@ async def test_get_users_success(client, auth_headers):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
-#Regression test for showing a successful user lifecycle
+# Regression test for showing a successful user lifecycle
 async def test_user_lifecycle(client):
     user = await create_user(client, name="Lifecycle User")
     headers = build_auth_headers(user)
@@ -77,7 +77,7 @@ async def test_user_lifecycle(client):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
-#Regression test for an invalid API key is rejected with a 401 not authorized error
+# Regression test for an invalid API key is rejected with a 401 not authorized error
 async def test_invalid_api_key(client):
     headers = {"x-api-key": "fake_key"}
 
@@ -87,7 +87,7 @@ async def test_invalid_api_key(client):
 
 
 @pytest.mark.asyncio
-#Test showing that a missing API key returns a 401 unauthorized error
+# Test showing that a missing API key returns a 401 unauthorized error
 async def test_missing_api_key(client):
     response = await client.get("/users/")
 
@@ -95,7 +95,7 @@ async def test_missing_api_key(client):
 
 
 @pytest.mark.asyncio
-#Test for showing a whitespace-only names are rejected
+# Test for showing a whitespace-only names are rejected
 async def test_create_user_whitespace_only_name(client):
     response = await client.post("/users/", json={"name": "   "})
 
