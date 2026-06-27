@@ -5,6 +5,7 @@ from datetime import datetime
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
+# Smoke test to show create_task returns expected data
 async def test_create_task(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Project"}, headers=auth_headers
@@ -24,6 +25,7 @@ async def test_create_task(client, auth_headers):
 
 
 @pytest.mark.asyncio
+# Test showing get_tasks returns a created task
 async def test_get_tasks_for_project(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Project"}, headers=auth_headers
@@ -44,6 +46,7 @@ async def test_get_tasks_for_project(client, auth_headers):
 
 
 @pytest.mark.asyncio
+# Test ensuring that a user can't create a task in another user's project
 async def test_cannot_create_task_in_other_users_project(client):
     # User A
     res_a = await client.post("/users/", json={"name": "User A"})
@@ -70,6 +73,7 @@ async def test_cannot_create_task_in_other_users_project(client):
 
 
 @pytest.mark.asyncio
+# Test showing that a created task in a nonexistent project returns a 404 error
 async def test_create_task_invalid_project(client, auth_headers):
     res = await client.post(
         "/tasks/projects/invalid-id", json={"title": "Test Task"}, headers=auth_headers
@@ -79,19 +83,24 @@ async def test_create_task_invalid_project(client, auth_headers):
 
 
 @pytest.mark.asyncio
+# Test for valid transitions of task status
+# todo > in progress > done
 async def test_update_task_status(client):
     user = await create_user(client, name="Task Owner")
     headers = build_auth_headers(user)
 
+    # Create the project and task
     project = await create_project(client, headers, name="Update Project")
     task = await create_task(client, headers, project["id"], title="Task")
 
+    # Update task to in progress
     first_update = await client.patch(
         f"/tasks/{task['id']}", json={"status": "in_progress"}, headers=headers
     )
     assert first_update.status_code == 200
     assert first_update.json()["status"] == "in_progress"
 
+    # Update task to done
     second_update = await client.patch(
         f"/tasks/{task['id']}", json={"status": "done"}, headers=headers
     )
@@ -100,6 +109,7 @@ async def test_update_task_status(client):
 
 
 @pytest.mark.asyncio
+# Test that updating a task with an invalid status returns a 422 error
 async def test_update_task_invalid_status(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Validation"}, headers=auth_headers
@@ -119,6 +129,7 @@ async def test_update_task_invalid_status(client, auth_headers):
 
 
 @pytest.mark.asyncio
+# Test for delete_task, and that the following GET returns 404 error
 async def test_delete_task(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Delete Task"}, headers=auth_headers
@@ -145,6 +156,7 @@ import pytest
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
+# Smoke test that a task can go from todo > in progress
 async def test_update_task_valid_transition_to_in_progress(client):
     user = await create_user(client, name="Task Owner")
     headers = build_auth_headers(user)
@@ -162,6 +174,7 @@ async def test_update_task_valid_transition_to_in_progress(client):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
+# Regression test for updating a task from in progress > done
 async def test_update_task_valid_transition_to_done(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
@@ -189,6 +202,7 @@ async def test_update_task_valid_transition_to_done(client, auth_headers):
 
 
 @pytest.mark.asyncio
+# Test for invalid transition for task from todo > done returns a 409 error
 async def test_update_task_invalid_transition_todo_to_done(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
@@ -211,6 +225,7 @@ async def test_update_task_invalid_transition_todo_to_done(client, auth_headers)
 
 
 @pytest.mark.asyncio
+# Test for invalid task move from done > todo
 async def test_update_task_invalid_transition_done_to_todo(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
@@ -243,6 +258,7 @@ async def test_update_task_invalid_transition_done_to_todo(client, auth_headers)
 
 
 @pytest.mark.asyncio
+# Test showing that a whitespace only title returns a 422 error
 async def test_create_task_whitespace_only_title(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Validation Project"}, headers=auth_headers
@@ -258,6 +274,7 @@ async def test_create_task_whitespace_only_title(client, auth_headers):
 
 @pytest.mark.asyncio
 @pytest.mark.regression
+# Regression test showing duplicate tasks cannot be created without a 409 error appearing
 async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Validation Project"}, headers=auth_headers
@@ -284,17 +301,21 @@ async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_h
 
 
 @pytest.mark.asyncio
+# Test showing that two tasks with the same title can exist in different projects
 async def test_same_task_title_allowed_in_different_projects(client, auth_headers):
+    # Project 1 creation
     project_res_1 = await client.post(
         "/projects/", json={"name": "Project One"}, headers=auth_headers
     )
     project_id_1 = project_res_1.json()["id"]
 
+    # Project 2 creation
     project_res_2 = await client.post(
         "/projects/", json={"name": "Project Two"}, headers=auth_headers
     )
     project_id_2 = project_res_2.json()["id"]
 
+    # Task creation
     res1 = await client.post(
         f"/tasks/projects/{project_id_1}",
         json={"title": "Shared Task Name"},
@@ -306,11 +327,13 @@ async def test_same_task_title_allowed_in_different_projects(client, auth_header
         headers=auth_headers,
     )
 
+    # Assert
     assert res1.status_code == 200
     assert res2.status_code == 200
 
 
 @pytest.mark.asyncio
+# Test showing that created tasks include timestamp information
 async def test_create_task_includes_timestamps(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
@@ -337,6 +360,7 @@ async def test_create_task_includes_timestamps(client):
 
 
 @pytest.mark.asyncio
+# Test to show that update_task changes the updated_at value
 async def test_update_task_changes_updated_at(client):
     from tests.helpers import (
         create_user,
@@ -369,6 +393,7 @@ async def test_update_task_changes_updated_at(client):
     assert new_updated_at > original_updated_at
 
     @pytest.mark.asyncio
+    # Test showing get_tasks filtering by defined status only brings tasks with that status
     async def test_get_tasks_filter_by_status(client):
         from tests.helpers import (
             create_user,
@@ -401,6 +426,7 @@ async def test_update_task_changes_updated_at(client):
 
 
 @pytest.mark.asyncio
+# Test showing get_tasks returns partial matches
 async def test_get_tasks_filter_by_title_partial_match(client):
     from tests.helpers import (
         create_user,
@@ -432,6 +458,7 @@ async def test_get_tasks_filter_by_title_partial_match(client):
 
 
 @pytest.mark.asyncio
+# Test showing get_tasks can use multiple parameters combined
 async def test_get_tasks_filter_by_status_and_title(client):
     from tests.helpers import (
         create_user,
@@ -469,6 +496,7 @@ async def test_get_tasks_filter_by_status_and_title(client):
 
 
 @pytest.mark.asyncio
+# Test showing that get_tasks returns an empty list if there are no matches in the query
 async def test_get_tasks_filter_returns_empty_list_when_no_match(client):
     from tests.helpers import (
         create_user,
@@ -493,6 +521,7 @@ async def test_get_tasks_filter_returns_empty_list_when_no_match(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks with pagination page=1, size=2 returns only two results
 async def test_get_tasks_pagination_first_page(client):
     from tests.helpers import (
         create_user,
@@ -519,6 +548,7 @@ async def test_get_tasks_pagination_first_page(client):
 
 
 @pytest.mark.asyncio
+# Test for pagination page = 2 contains different items than page = 1 with no overlap
 async def test_get_tasks_pagination_second_page(client):
     from tests.helpers import (
         create_user,
@@ -553,6 +583,7 @@ async def test_get_tasks_pagination_second_page(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks last page can have fewer items than the page size
 async def test_get_tasks_pagination_last_partial_page(client):
     from tests.helpers import (
         create_user,
@@ -579,6 +610,7 @@ async def test_get_tasks_pagination_last_partial_page(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks an out-of-bounds page returns a 200 and empty list
 async def test_get_tasks_pagination_empty_page(client):
     from tests.helpers import (
         create_user,
@@ -603,6 +635,7 @@ async def test_get_tasks_pagination_empty_page(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks pagination page < 1 returns a 422 error
 async def test_get_tasks_pagination_invalid_page(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
@@ -618,6 +651,7 @@ async def test_get_tasks_pagination_invalid_page(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks pagination size < 1 returns a 422 error
 async def test_get_tasks_pagination_invalid_size(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
@@ -633,6 +667,7 @@ async def test_get_tasks_pagination_invalid_size(client):
 
 
 @pytest.mark.asyncio
+# Test that get_tasks filtering and pagination can work together
 async def test_get_tasks_filtering_and_pagination_together(client):
     from tests.helpers import (
         create_user,
@@ -670,6 +705,7 @@ async def test_get_tasks_filtering_and_pagination_together(client):
 
 
 @pytest.mark.asyncio
+# Test that an admin user can create tasks in another user's projects
 async def test_admin_can_create_task_in_other_users_project(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
@@ -694,6 +730,7 @@ async def test_admin_can_create_task_in_other_users_project(client):
 
 
 @pytest.mark.asyncio
+# Test that a user cannot access another users account without auth
 async def test_member_cannot_access_other_users_project_still(client):
     from tests.helpers import create_user, build_auth_headers, create_project
 
