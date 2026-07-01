@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.db_models import Project
@@ -6,12 +6,32 @@ from app.schemas import ProjectCreate, ProjectResponse
 from app.auth import get_current_user, is_admin
 import uuid
 
-# Setting the router for projects
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-# Function to create a project
-@router.post("/", response_model=ProjectResponse)
+def get_project_or_404(db: Session, project_id: str):
+    project = db.query(Project).filter(Project.id == project_id).first()
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+
+    return project
+
+
+def get_authorized_project(db: Session, project_id: str, current_user: dict):
+    project = get_project_or_404(db, project_id)
+
+    if not is_admin(current_user) and project.owner_id != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+
+    return project
+
+
+@router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
     project: ProjectCreate,
     current_user: dict = Depends(get_current_user),
@@ -20,39 +40,39 @@ def create_project(
     existing_project = (
         db.query(Project)
         .filter(
-            Project.owner_id == current_user["id"], Project.name.ilike(project.name)
+            Project.owner_id == current_user["id"],
+            Project.name.ilike(project.name.strip()),
         )
         .first()
     )
 
     if existing_project:
         raise HTTPException(
-            status_code=409, detail="Project name already exists for this user"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Project name already exists for this user",
         )
 
-    project_id = str(uuid.uuid4())
-
     new_project = Project(
-        id=project_id,
-        name=project.name,
+        id=str(uuid.uuid4()),
+        name=project.name.strip(),
         owner_id=current_user["id"],
     )
 
-    db.add(new_project)
-    db.commit()
-    db.refresh(new_project)
+    try:
+        db.add(new_project)
+        db.commit()
+        db.refresh(new_project)
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create project",
+        )
 
-    return {
-        "id": new_project.id,
-        "name": new_project.name,
-        "owner_id": new_project.owner_id,
-        "created_at": new_project.created_at,
-        "updated_at": new_project.updated_at,
-    }
+    return new_project
 
 
-# Function to create project
-@router.get("/")
+@router.get("/", response_model=list[ProjectResponse])
 def get_projects(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -64,58 +84,35 @@ def get_projects(
             db.query(Project).filter(Project.owner_id == current_user["id"]).all()
         )
 
-    return [
-        {
-            "id": project.id,
-            "name": project.name,
-            "owner_id": project.owner_id,
-            "created_at": project.created_at,
-            "updated_at": project.updated_at,
-        }
-        for project in projects
-    ]
+    return projects
 
 
-# Function to get an individual project based off project_id
-@router.get("/{project_id}")
+@router.get("/{project_id}", response_model=ProjectResponse)
 def get_project(
     project_id: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    project = db.query(Project).filter(Project.id == project_id).first()
-
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    return {
-        "id": project.id,
-        "name": project.name,
-        "owner_id": project.owner_id,
-        "created_at": project.created_at,
-        "updated_at": project.updated_at,
-    }
+    project = get_authorized_project(db, project_id, current_user)
+    return project
 
 
-# Function to delete project
-@router.delete("/{project_id}")
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
     project_id: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    project = db.query(Project).filter(Project.id == project_id).first()
+    project = get_authorized_project(db, project_id, current_user)
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    try:
+        db.delete(project)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete project",
+        )
 
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    db.delete(project)
-    db.commit()
-
-    return {"message": "Project deleted"}
+    return

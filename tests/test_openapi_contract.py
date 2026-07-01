@@ -1,6 +1,5 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-
 from app.main import app
 
 
@@ -24,6 +23,10 @@ async def test_openapi_schema_contains_expected_methods():
     # Tasks
     assert {"get", "post"} <= set(paths["/tasks/projects/{project_id}"].keys())
     assert {"patch", "delete"} <= set(paths["/tasks/{task_id}"].keys())
+
+    # Users
+    assert {"get", "post"} <= set(paths["/users/"].keys())
+    assert {"get", "delete"} <= set(paths["/users/{user_id}"].keys())
 
 
 @pytest.mark.asyncio
@@ -65,11 +68,10 @@ async def test_openapi_schema_includes_api_key_security_metadata():
 
     for path in protected_paths:
         operation_security_found = any(
-            "security" in operation and operation["security"]
+            isinstance(operation, dict) and operation.get("security")
             for operation in paths[path].values()
-            if isinstance(operation, dict)
         )
+
         assert (
             operation_security_found
         ), f"No OpenAPI security metadata found for protected path: {path}"
-    print(paths["/projects/"])

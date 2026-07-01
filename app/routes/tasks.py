@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.db_models import Task, Project
@@ -7,78 +7,95 @@ from app.auth import get_current_user, is_admin
 from app.rules import validate_task_transition
 import uuid
 
-# Setting router for tasks
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-# Function to create a task
-@router.post("/projects/{project_id}", response_model=TaskResponse)
+def get_authorized_project(db: Session, project_id: str, current_user: dict):
+    project = db.query(Project).filter(Project.id == project_id).first()
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+
+    if not is_admin(current_user) and project.owner_id != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+
+    return project
+
+
+def get_task_or_404(db: Session, task_id: str):
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+
+    return task
+
+
+@router.post(
+    "/projects/{project_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_task(
     project_id: str,
     task: TaskCreate,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    project = db.query(Project).filter(Project.id == project_id).first()
+    project = get_authorized_project(db, project_id, current_user)
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
+    # Prevent duplicate titles (case-insensitive)
     existing_task = (
         db.query(Task)
-        .filter(Task.project_id == project_id, Task.title.ilike(task.title))
+        .filter(Task.project_id == project_id, Task.title.ilike(task.title.strip()))
         .first()
     )
 
     if existing_task:
         raise HTTPException(
-            status_code=409, detail="Task title already exists in this project"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Task title already exists in this project",
         )
 
-    task_id = str(uuid.uuid4())
-
     new_task = Task(
-        id=task_id,
-        title=task.title,
+        id=str(uuid.uuid4()),
+        title=task.title.strip(),
         status="todo",
         project_id=project_id,
     )
 
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
+    try:
+        db.add(new_task)
+        db.commit()
+        db.refresh(new_task)
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create task",
+        )
 
-    return {
-        "id": new_task.id,
-        "title": new_task.title,
-        "status": new_task.status,
-        "project_id": new_task.project_id,
-        "created_at": new_task.created_at,
-        "updated_at": new_task.updated_at,
-    }
+    return new_task
 
 
-# Function to get an individual task by project_id
-@router.get("/projects/{project_id}")
+@router.get("/projects/{project_id}", response_model=list[TaskResponse])
+@router.get("/projects/{project_id}", response_model=list[TaskResponse])
 def get_tasks(
     project_id: str,
-    status: str | None = None,
+    status: str | None = Query(None),
     title: str | None = None,
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    project = db.query(Project).filter(Project.id == project_id).first()
-
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    get_authorized_project(db, project_id, current_user)
 
     query = db.query(Task).filter(Task.project_id == project_id)
 
@@ -91,77 +108,61 @@ def get_tasks(
     offset = (page - 1) * size
     tasks = query.offset(offset).limit(size).all()
 
-    return [
-        {
-            "id": task.id,
-            "title": task.title,
-            "status": task.status,
-            "project_id": task.project_id,
-            "created_at": task.created_at,
-            "updated_at": task.updated_at,
-        }
-        for task in tasks
-    ]
+    return tasks
 
 
-# Function to update a task
-@router.patch("/{task_id}")
+@router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: str,
     task_update: TaskUpdate,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = get_task_or_404(db, task_id)
+    project = get_authorized_project(db, task.project_id, current_user)
 
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    # Handle partial updates safely
+    if task_update.status is not None:
+        validate_task_transition(task.status, task_update.status)
+        task.status = task_update.status
 
-    project = db.query(Project).filter(Project.id == task.project_id).first()
+    try:
+        db.commit()
+        db.refresh(task)
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update task",
+        )
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    validate_task_transition(task.status, task_update.status)
-
-    task.status = task_update.status
-    db.commit()
-    db.refresh(task)
-
-    return {
-        "id": task.id,
-        "title": task.title,
-        "status": task.status,
-        "project_id": task.project_id,
-        "created_at": task.created_at,
-        "updated_at": task.updated_at,
-    }
+    return task
 
 
-# Function to delete a task
-@router.delete("/{task_id}")
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(
     task_id: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = get_task_or_404(db, task_id)
+    get_authorized_project(db, task.project_id, current_user)
 
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    try:
+        db.delete(task)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete task",
+        )
 
-    project = db.query(Project).filter(Project.id == task.project_id).first()
+    return
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
 
-    if not is_admin(current_user) and project.owner_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+def validate_task_transition(current, new):
+    valid = {"todo": ["in_progress"], "in_progress": ["done"], "done": []}
 
-    db.delete(task)
-    db.commit()
-
-    return {"message": "Task deleted"}
+    if new not in valid.get(current, []):
+        raise HTTPException(status_code=409, detail="Invalid status transition")

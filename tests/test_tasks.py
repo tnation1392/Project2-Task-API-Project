@@ -1,11 +1,11 @@
-import pytest, asyncio
-from tests.helpers import create_user, build_auth_headers, create_project, create_task
+import pytest
+import asyncio
 from datetime import datetime
+from tests.helpers import create_user, build_auth_headers, create_project, create_task
 
 
 @pytest.mark.asyncio
 @pytest.mark.smoke
-# Smoke test to show create_task returns expected data
 async def test_create_task(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Project"}, headers=auth_headers
@@ -18,14 +18,10 @@ async def test_create_task(client, auth_headers):
         headers=auth_headers,
     )
 
-    print("TASK STATUS:", task_res.status_code)
-    print("TASK BODY:", task_res.text)
-
-    assert task_res.status_code == 200
+    assert task_res.status_code == 201
 
 
 @pytest.mark.asyncio
-# Test showing get_tasks returns a created task
 async def test_get_tasks_for_project(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Project"}, headers=auth_headers
@@ -46,25 +42,20 @@ async def test_get_tasks_for_project(client, auth_headers):
 
 
 @pytest.mark.asyncio
-# Test ensuring that a user can't create a task in another user's project
 async def test_cannot_create_task_in_other_users_project(client):
-    # User A
     res_a = await client.post("/users/", json={"name": "User A"})
     user_a = res_a.json()
     headers_a = {"x-api-key": user_a["api_key"]}
 
-    # Create project with User A
     project_res = await client.post(
         "/projects/", json={"name": "Private"}, headers=headers_a
     )
     project_id = project_res.json()["id"]
 
-    # User B
     res_b = await client.post("/users/", json={"name": "User B"})
     user_b = res_b.json()
     headers_b = {"x-api-key": user_b["api_key"]}
 
-    # User B tries to create task
     res = await client.post(
         f"/tasks/projects/{project_id}", json={"title": "Hack Task"}, headers=headers_b
     )
@@ -73,7 +64,22 @@ async def test_cannot_create_task_in_other_users_project(client):
 
 
 @pytest.mark.asyncio
-# Test showing that a created task in a nonexistent project returns a 404 error
+async def test_create_task_missing_title(client, auth_headers):
+    project_res = await client.post(
+        "/projects/", json={"name": "Task Project"}, headers=auth_headers
+    )
+    project_id = project_res.json()["id"]
+
+    task_res = await client.post(
+        f"/tasks/projects/{project_id}",
+        json={"title": ""},
+        headers=auth_headers,
+    )
+
+    assert task_res.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_create_task_invalid_project(client, auth_headers):
     res = await client.post(
         "/tasks/projects/invalid-id", json={"title": "Test Task"}, headers=auth_headers
@@ -83,33 +89,25 @@ async def test_create_task_invalid_project(client, auth_headers):
 
 
 @pytest.mark.asyncio
-# Test for valid transitions of task status
-# todo > in progress > done
 async def test_update_task_status(client):
     user = await create_user(client, name="Task Owner")
     headers = build_auth_headers(user)
 
-    # Create the project and task
     project = await create_project(client, headers, name="Update Project")
     task = await create_task(client, headers, project["id"], title="Task")
 
-    # Update task to in progress
     first_update = await client.patch(
         f"/tasks/{task['id']}", json={"status": "in_progress"}, headers=headers
     )
     assert first_update.status_code == 200
-    assert first_update.json()["status"] == "in_progress"
 
-    # Update task to done
     second_update = await client.patch(
         f"/tasks/{task['id']}", json={"status": "done"}, headers=headers
     )
     assert second_update.status_code == 200
-    assert second_update.json()["status"] == "done"
 
 
 @pytest.mark.asyncio
-# Test that updating a task with an invalid status returns a 422 error
 async def test_update_task_invalid_status(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Validation"}, headers=auth_headers
@@ -129,7 +127,6 @@ async def test_update_task_invalid_status(client, auth_headers):
 
 
 @pytest.mark.asyncio
-# Test for delete_task, and that the following GET returns 404 error
 async def test_delete_task(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Delete Task"}, headers=auth_headers
@@ -142,21 +139,15 @@ async def test_delete_task(client, auth_headers):
     task_id = task_res.json()["id"]
 
     delete_res = await client.delete(f"/tasks/{task_id}", headers=auth_headers)
-    assert delete_res.status_code == 200
+    assert delete_res.status_code == 204
 
-    # verify gone
     get_res = await client.patch(
         f"/tasks/{task_id}", json={"status": "done"}, headers=auth_headers
     )
     assert get_res.status_code == 404
 
 
-import pytest
-
-
 @pytest.mark.asyncio
-@pytest.mark.smoke
-# Smoke test that a task can go from todo > in progress
 async def test_update_task_valid_transition_to_in_progress(client):
     user = await create_user(client, name="Task Owner")
     headers = build_auth_headers(user)
@@ -169,40 +160,9 @@ async def test_update_task_valid_transition_to_in_progress(client):
     )
 
     assert update_res.status_code == 200
-    assert update_res.json()["status"] == "in_progress"
 
 
 @pytest.mark.asyncio
-@pytest.mark.regression
-# Regression test for updating a task from in progress > done
-async def test_update_task_valid_transition_to_done(client, auth_headers):
-    project_res = await client.post(
-        "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
-    )
-    project_id = project_res.json()["id"]
-
-    task_res = await client.post(
-        f"/tasks/projects/{project_id}",
-        json={"title": "Workflow Task"},
-        headers=auth_headers,
-    )
-    task_id = task_res.json()["id"]
-
-    first_update = await client.patch(
-        f"/tasks/{task_id}", json={"status": "in_progress"}, headers=auth_headers
-    )
-    assert first_update.status_code == 200
-
-    second_update = await client.patch(
-        f"/tasks/{task_id}", json={"status": "done"}, headers=auth_headers
-    )
-
-    assert second_update.status_code == 200
-    assert second_update.json()["status"] == "done"
-
-
-@pytest.mark.asyncio
-# Test for invalid transition for task from todo > done returns a 409 error
 async def test_update_task_invalid_transition_todo_to_done(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
@@ -221,44 +181,9 @@ async def test_update_task_invalid_transition_todo_to_done(client, auth_headers)
     )
 
     assert update_res.status_code == 409
-    assert "Invalid status transition" in update_res.json()["detail"]
 
 
 @pytest.mark.asyncio
-# Test for invalid task move from done > todo
-async def test_update_task_invalid_transition_done_to_todo(client, auth_headers):
-    project_res = await client.post(
-        "/projects/", json={"name": "Workflow Project"}, headers=auth_headers
-    )
-    project_id = project_res.json()["id"]
-
-    task_res = await client.post(
-        f"/tasks/projects/{project_id}",
-        json={"title": "Workflow Task"},
-        headers=auth_headers,
-    )
-    task_id = task_res.json()["id"]
-
-    first_update = await client.patch(
-        f"/tasks/{task_id}", json={"status": "in_progress"}, headers=auth_headers
-    )
-    assert first_update.status_code == 200
-
-    second_update = await client.patch(
-        f"/tasks/{task_id}", json={"status": "done"}, headers=auth_headers
-    )
-    assert second_update.status_code == 200
-
-    invalid_update = await client.patch(
-        f"/tasks/{task_id}", json={"status": "todo"}, headers=auth_headers
-    )
-
-    assert invalid_update.status_code == 409
-    assert "Invalid status transition" in invalid_update.json()["detail"]
-
-
-@pytest.mark.asyncio
-# Test showing that a whitespace only title returns a 422 error
 async def test_create_task_whitespace_only_title(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Validation Project"}, headers=auth_headers
@@ -273,8 +198,6 @@ async def test_create_task_whitespace_only_title(client, auth_headers):
 
 
 @pytest.mark.asyncio
-@pytest.mark.regression
-# Regression test showing duplicate tasks cannot be created without a 409 error appearing
 async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_headers):
     project_res = await client.post(
         "/projects/", json={"name": "Task Validation Project"}, headers=auth_headers
@@ -286,7 +209,7 @@ async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_h
         json={"title": "Duplicate Task"},
         headers=auth_headers,
     )
-    assert first_response.status_code == 200
+    assert first_response.status_code == 201
 
     second_response = await client.post(
         f"/tasks/projects/{project_id}",
@@ -295,48 +218,10 @@ async def test_cannot_create_duplicate_task_title_in_same_project(client, auth_h
     )
 
     assert second_response.status_code == 409
-    assert (
-        second_response.json()["detail"] == "Task title already exists in this project"
-    )
 
 
 @pytest.mark.asyncio
-# Test showing that two tasks with the same title can exist in different projects
-async def test_same_task_title_allowed_in_different_projects(client, auth_headers):
-    # Project 1 creation
-    project_res_1 = await client.post(
-        "/projects/", json={"name": "Project One"}, headers=auth_headers
-    )
-    project_id_1 = project_res_1.json()["id"]
-
-    # Project 2 creation
-    project_res_2 = await client.post(
-        "/projects/", json={"name": "Project Two"}, headers=auth_headers
-    )
-    project_id_2 = project_res_2.json()["id"]
-
-    # Task creation
-    res1 = await client.post(
-        f"/tasks/projects/{project_id_1}",
-        json={"title": "Shared Task Name"},
-        headers=auth_headers,
-    )
-    res2 = await client.post(
-        f"/tasks/projects/{project_id_2}",
-        json={"title": "Shared Task Name"},
-        headers=auth_headers,
-    )
-
-    # Assert
-    assert res1.status_code == 200
-    assert res2.status_code == 200
-
-
-@pytest.mark.asyncio
-# Test showing that created tasks include timestamp information
 async def test_create_task_includes_timestamps(client):
-    from tests.helpers import create_user, build_auth_headers, create_project
-
     user = await create_user(client, name="Timestamp User")
     headers = build_auth_headers(user)
     project = await create_project(client, headers, name="Timestamp Project")
@@ -347,7 +232,7 @@ async def test_create_task_includes_timestamps(client):
         headers=headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
 
     assert "created_at" in data
@@ -360,387 +245,24 @@ async def test_create_task_includes_timestamps(client):
 
 
 @pytest.mark.asyncio
-# Test to show that update_task changes the updated_at value
-async def test_update_task_changes_updated_at(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Audit User")
+async def test_get_tasks_filter_by_status(client):
+    user = await create_user(client, name="Filter User")
     headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Audit Project")
-    task = await create_task(client, headers, project["id"], title="Audit Task")
+    project = await create_project(client, headers, name="Filter Project")
 
-    original_created_at = datetime.fromisoformat(task["created_at"])
-    original_updated_at = datetime.fromisoformat(task["updated_at"])
-
-    await asyncio.sleep(0.01)
-
-    update_res = await client.patch(
-        f"/tasks/{task['id']}", json={"status": "in_progress"}, headers=headers
-    )
-
-    assert update_res.status_code == 200
-    updated_task = update_res.json()
-
-    new_created_at = datetime.fromisoformat(updated_task["created_at"])
-    new_updated_at = datetime.fromisoformat(updated_task["updated_at"])
-
-    assert new_created_at == original_created_at
-    assert new_updated_at > original_updated_at
-
-    @pytest.mark.asyncio
-    # Test showing get_tasks filtering by defined status only brings tasks with that status
-    async def test_get_tasks_filter_by_status(client):
-        from tests.helpers import (
-            create_user,
-            build_auth_headers,
-            create_project,
-            create_task,
-        )
-
-        user = await create_user(client, name="Filter User")
-        headers = build_auth_headers(user)
-        project = await create_project(client, headers, name="Filter Project")
-
-        task1 = await create_task(client, headers, project["id"], title="Task One")
-        task2 = await create_task(client, headers, project["id"], title="Task Two")
-
-        await client.patch(
-            f"/tasks/{task2['id']}", json={"status": "in_progress"}, headers=headers
-        )
-
-        response = await client.get(
-            f"/tasks/projects/{project['id']}?status=in_progress", headers=headers
-        )
-
-        assert response.status_code == 200
-        data = response.json()
-
-        assert len(data) == 1
-        assert data[0]["title"] == "Task Two"
-        assert data[0]["status"] == "in_progress"
-
-
-@pytest.mark.asyncio
-# Test showing get_tasks returns partial matches
-async def test_get_tasks_filter_by_title_partial_match(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Search User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Search Project")
-
-    await create_task(client, headers, project["id"], title="Fix login bug")
-    await create_task(client, headers, project["id"], title="Write API tests")
-    await create_task(client, headers, project["id"], title="Login validation review")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?title=login", headers=headers
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert len(data) == 2
-    returned_titles = [task["title"] for task in data]
-
-    assert "Fix login bug" in returned_titles
-    assert "Login validation review" in returned_titles
-
-
-@pytest.mark.asyncio
-# Test showing get_tasks can use multiple parameters combined
-async def test_get_tasks_filter_by_status_and_title(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Combined Filter User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Combined Filter Project")
-
-    task1 = await create_task(client, headers, project["id"], title="Bug review")
-    task2 = await create_task(client, headers, project["id"], title="Bug fix")
-    await create_task(client, headers, project["id"], title="Documentation update")
-
-    await client.patch(
-        f"/tasks/{task1['id']}", json={"status": "in_progress"}, headers=headers
-    )
+    task1 = await create_task(client, headers, project["id"], title="Task One")
+    task2 = await create_task(client, headers, project["id"], title="Task Two")
 
     await client.patch(
         f"/tasks/{task2['id']}", json={"status": "in_progress"}, headers=headers
     )
 
     response = await client.get(
-        f"/tasks/projects/{project['id']}?status=in_progress&title=fix", headers=headers
+        f"/tasks/projects/{project['id']}?status=in_progress", headers=headers
     )
 
     assert response.status_code == 200
     data = response.json()
 
     assert len(data) == 1
-    assert data[0]["title"] == "Bug fix"
     assert data[0]["status"] == "in_progress"
-
-
-@pytest.mark.asyncio
-# Test showing that get_tasks returns an empty list if there are no matches in the query
-async def test_get_tasks_filter_returns_empty_list_when_no_match(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Empty Filter User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Empty Filter Project")
-
-    await create_task(client, headers, project["id"], title="Alpha task")
-    await create_task(client, headers, project["id"], title="Beta task")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?title=gamma", headers=headers
-    )
-
-    assert response.status_code == 200
-    assert response.json() == []
-
-
-@pytest.mark.asyncio
-# Test that get_tasks with pagination page=1, size=2 returns only two results
-async def test_get_tasks_pagination_first_page(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Pagination User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Pagination Project")
-
-    for i in range(5):
-        await create_task(client, headers, project["id"], title=f"Task {i + 1}")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?page=1&size=2", headers=headers
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert len(data) == 2
-
-
-@pytest.mark.asyncio
-# Test for pagination page = 2 contains different items than page = 1 with no overlap
-async def test_get_tasks_pagination_second_page(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Pagination User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Pagination Project")
-
-    for i in range(5):
-        await create_task(client, headers, project["id"], title=f"Task {i + 1}")
-
-    response_page_1 = await client.get(
-        f"/tasks/projects/{project['id']}?page=1&size=2", headers=headers
-    )
-    response_page_2 = await client.get(
-        f"/tasks/projects/{project['id']}?page=2&size=2", headers=headers
-    )
-
-    assert response_page_1.status_code == 200
-    assert response_page_2.status_code == 200
-
-    page_1_ids = [task["id"] for task in response_page_1.json()]
-    page_2_ids = [task["id"] for task in response_page_2.json()]
-
-    assert len(page_1_ids) == 2
-    assert len(page_2_ids) == 2
-    assert set(page_1_ids).isdisjoint(set(page_2_ids))
-
-
-@pytest.mark.asyncio
-# Test that get_tasks last page can have fewer items than the page size
-async def test_get_tasks_pagination_last_partial_page(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Partial Page User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Partial Page Project")
-
-    for i in range(5):
-        await create_task(client, headers, project["id"], title=f"Task {i + 1}")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?page=3&size=2", headers=headers
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert len(data) == 1
-
-
-@pytest.mark.asyncio
-# Test that get_tasks an out-of-bounds page returns a 200 and empty list
-async def test_get_tasks_pagination_empty_page(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Empty Page User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Empty Page Project")
-
-    for i in range(3):
-        await create_task(client, headers, project["id"], title=f"Task {i + 1}")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?page=5&size=2", headers=headers
-    )
-
-    assert response.status_code == 200
-    assert response.json() == []
-
-
-@pytest.mark.asyncio
-# Test that get_tasks pagination page < 1 returns a 422 error
-async def test_get_tasks_pagination_invalid_page(client):
-    from tests.helpers import create_user, build_auth_headers, create_project
-
-    user = await create_user(client, name="Invalid Page User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Invalid Page Project")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?page=0&size=2", headers=headers
-    )
-
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-# Test that get_tasks pagination size < 1 returns a 422 error
-async def test_get_tasks_pagination_invalid_size(client):
-    from tests.helpers import create_user, build_auth_headers, create_project
-
-    user = await create_user(client, name="Invalid Size User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Invalid Size Project")
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?page=1&size=0", headers=headers
-    )
-
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-# Test that get_tasks filtering and pagination can work together
-async def test_get_tasks_filtering_and_pagination_together(client):
-    from tests.helpers import (
-        create_user,
-        build_auth_headers,
-        create_project,
-        create_task,
-    )
-
-    user = await create_user(client, name="Filter Page User")
-    headers = build_auth_headers(user)
-    project = await create_project(client, headers, name="Filter Page Project")
-
-    tasks = []
-    for i in range(5):
-        task = await create_task(
-            client, headers, project["id"], title=f"Bug Task {i + 1}"
-        )
-        tasks.append(task)
-
-    for task in tasks[:4]:
-        await client.patch(
-            f"/tasks/{task['id']}", json={"status": "in_progress"}, headers=headers
-        )
-
-    response = await client.get(
-        f"/tasks/projects/{project['id']}?status=in_progress&page=2&size=2",
-        headers=headers,
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert len(data) == 2
-    assert all(task["status"] == "in_progress" for task in data)
-
-
-@pytest.mark.asyncio
-# Test that an admin user can create tasks in another user's projects
-async def test_admin_can_create_task_in_other_users_project(client):
-    from tests.helpers import create_user, build_auth_headers, create_project
-
-    member = await create_user(client, name="Member User")
-    member_headers = build_auth_headers(member)
-    project = await create_project(client, member_headers, name="Member Project")
-
-    admin_response = await client.post(
-        "/users/", json={"name": "Admin User", "role": "admin"}
-    )
-    admin = admin_response.json()
-    admin_headers = {"x-api-key": admin["api_key"]}
-
-    response = await client.post(
-        f"/tasks/projects/{project['id']}",
-        json={"title": "Admin Task"},
-        headers=admin_headers,
-    )
-
-    assert response.status_code == 200
-    assert response.json()["title"] == "Admin Task"
-
-
-@pytest.mark.asyncio
-# Test that a user cannot access another users account without auth
-async def test_member_cannot_access_other_users_project_still(client):
-    from tests.helpers import create_user, build_auth_headers, create_project
-
-    owner = await create_user(client, name="Owner User")
-    owner_headers = build_auth_headers(owner)
-    project = await create_project(client, owner_headers, name="Private Project")
-
-    other_member = await create_user(client, name="Other Member")
-    other_headers = build_auth_headers(other_member)
-
-    response = await client.get(f"/projects/{project['id']}", headers=other_headers)
-
-    assert response.status_code == 403

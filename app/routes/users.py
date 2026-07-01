@@ -1,50 +1,62 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.schemas import UserCreate, UserResponse
-from app.auth import generate_api_key, get_current_user
+from app.auth import generate_api_key, get_current_user, api_key_header
 from app.db import get_db
 from app.db_models import User
 import uuid
 
-# Set router for users
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-# Function to create a user
-@router.post("/", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    user_id = str(uuid.uuid4())
+def get_user_or_404(db: Session, user_id: str):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    return user
+
+
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+):
     api_key = generate_api_key()
 
-    new_user = User(id=user_id, name=user.name, api_key=api_key, role=user.role)
+    new_user = User(
+        id=str(uuid.uuid4()),
+        name=user.name.strip(),
+        api_key=api_key,
+        role=user.role,
+    )
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user",
+        )
 
-    return {
-        "id": new_user.id,
-        "name": new_user.name,
-        "api_key": new_user.api_key,
-        "role": new_user.role,
-    }
+    return new_user
 
 
-# Function to get multiple users
-@router.get("/")
+@router.get("/", response_model=list[UserResponse])
 def get_users(
     current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
-
-    return [
-        {"id": user.id, "name": user.name, "api_key": user.api_key, "role": user.role}
-        for user in users
-    ]
+    return users
 
 
-# Function to get a user based on user_id
-@router.get("/{user_id}")
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: str,
     current_user: dict = Depends(get_current_user),
@@ -55,27 +67,29 @@ def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {
-        "id": user.id,
-        "name": user.name,
-        "api_key": user.api_key,
-        "role": user.role,
-    }
+    return user
 
 
-# Function to delete a user
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = get_user_or_404(db, user_id)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        db.delete(user)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user",
+        )
 
-    db.delete(user)
-    db.commit()
+    return
 
-    return {"message": "User deleted"}
+
+def is_admin(user: dict):
+    return user.get("role") == "admin"
