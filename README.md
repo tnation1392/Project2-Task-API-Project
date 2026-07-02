@@ -1,120 +1,192 @@
-# Project2 Task API Project
+# Task API Project
 
-[![CI](https://github.com/tnation1392/project2-task-api-project/actions/workflows/ci.yml/badge.svg)](https://github.com/tnation1392/project2-task-api-project/actions/workflows/ci.yml)
+A FastAPI task management API built as a QA automation portfolio project.
 
-A portfolio-quality **FastAPI task management API** with a **QA automation-focused test suite**. The project demonstrates practical API quality engineering through authentication, authorization, validation, filtering, pagination, workflow/state rules, OpenAPI contract testing, and CI quality gates.
+The goal of this project was to learn API development and automated testing while practicing the kinds of scenarios commonly tested by QA Automation Engineers. During development, the project evolved from using in-memory storage to a database-backed application using SQLite and SQLAlchemy.
 
----
-
-## Project Overview
-
-This project is designed to showcase **mid-level QA automation skills** through a practical API system built with FastAPI and backed by SQLite + SQLAlchemy.
-
-It combines:
-- a working REST API for **Users, Projects, and Tasks**
-- a robust **pytest-based automation suite**
-- **GitHub Actions CI** for repeatable quality enforcement
-- supporting documentation for both implementation and test strategy
+The project includes API authentication, authorization, validation, filtering, pagination, workflow rules, automated testing, OpenAPI contract checks, and GitHub Actions CI.
 
 ---
 
-## API Features
+# Project Overview
 
-### Core Resources
+This project started as a simple FastAPI application and was gradually expanded to include more realistic backend functionality.
+
+As development continued, the project was upgraded to include:
+
+- SQLite database persistence
+- SQLAlchemy ORM models
+- User, Project, and Task relationships
+- Authentication and authorization
+- Workflow validation rules
+- Filtering and pagination
+- OpenAPI contract testing
+- CI/CD automation with GitHub Actions
+
+The project was also used to practice API test automation with pytest and httpx.
+
+---
+
+# What I Learned
+
+This project gave me hands-on experience with:
+
+- Building REST APIs using FastAPI
+- Creating database models using SQLAlchemy
+- Working with SQLite databases
+- Using dependency injection for database sessions
+- Writing automated API tests with pytest
+- Testing authentication and authorization behavior
+- Creating positive, negative, and edge-case tests
+- Validating OpenAPI contracts
+- Configuring CI pipelines with GitHub Actions
+- Debugging integration issues between application code, database models, and tests
+
+---
+
+# Database Upgrade
+
+One of the biggest milestones in this project was migrating from in-memory storage to a SQLite database.
+
+## Before the Migration
+
+- Data was stored in Python data structures
+- Data was lost when the application restarted
+- Resource relationships were simplified
+
+## After the Migration
+
+- Data is persisted in SQLite
+- SQLAlchemy models are used for Users, Projects, and Tasks
+- Projects are linked to Users
+- Tasks are linked to Projects
+- Automated tests validate database-backed behavior
+
+This migration required refactoring API routes, updating automated tests, and troubleshooting several issues related to database persistence, authentication, route registration, status codes, filtering, and API contracts.
+
+---
+
+# API Features
+
+## Resources
+
 - Users
 - Projects
 - Tasks
 
-### Functionality
-- Full CRUD support across implemented resources
-- SQLite persistence with SQLAlchemy ORM
-- Pydantic-based request validation
-- Timestamp / audit field coverage
+## Functionality
+
+- Create, read, update, and delete operations
+- SQLite database persistence
+- SQLAlchemy ORM integration
+- Request validation using Pydantic
+- Timestamp tracking
 - Filtering support
 - Pagination support
-- Task workflow/state transition rules
+- Task workflow validation
 
-### Security & Authorization
+## Authentication & Authorization
+
+### Authentication
+
 - API key authentication
-- Ownership-based authorization
-- Role-based authorization:
-  - `member`
-  - `admin`
 
-### Validation & Business Rules
-- Invalid input handling with appropriate HTTP status codes
-- Resource ownership enforcement
-- Nested resource relationship validation
-- Task state transition validation
+### Authorization
+
+- Project ownership validation
+- Role-based access control
+
+Roles:
+
+- member
+- admin
 
 ---
 
-## QA Automation Coverage
+# Testing Focus
 
-This repository is intentionally built as a **QA automation portfolio project**, not just an API demo.
+This project was built with testing as a major focus.
 
-### Test Coverage Includes
-- Positive API tests
-- Negative API tests
-- Edge case scenarios
-- Authentication and authorization checks
-- Validation rule coverage
-- Resource relationship checks
-- Filtering and pagination validation
-- Task workflow/state transition checks
+The automated test suite covers:
+
+- Positive API scenarios
+- Negative API scenarios
+- Authentication testing
+- Authorization testing
+- Validation testing
+- Task workflow rules
+- Filtering behavior
+- Pagination behavior
+- Database persistence
 - OpenAPI contract validation
 
-### Testing Techniques Used
-- Async API testing with `httpx`
-- `pytest` fixtures for reusable setup
-- Parametrized test cases
-- Helper / factory-style test setup utilities
-- Test isolation between runs
-- Smoke and regression markers
+## Testing Tools Used
 
-### OpenAPI Contract Testing
-The project includes OpenAPI contract validation tests against `/openapi.json` to help catch accidental contract regressions.
-
-Current contract checks include:
-- OpenAPI schema availability
-- OpenAPI version/schema sanity checks
-- Core published API paths
-- Expected HTTP methods for core resources
-
----
-
-## Tech Stack
-
-### Application
-- FastAPI
-- SQLite
-- SQLAlchemy
-- Pydantic
-
-### Testing
 - pytest
 - pytest-asyncio
 - httpx
 - pytest-cov
 - pytest-html
 
-### Quality / CI
+---
+
+# OpenAPI Contract Testing
+
+The project includes automated tests that validate the generated OpenAPI schema.
+
+Current checks include:
+
+- OpenAPI schema availability
+- Published API paths
+- Expected HTTP methods
+- Security metadata for protected endpoints
+
+These tests help detect accidental API contract changes before they are merged.
+
+---
+
+# Tech Stack
+
+## Backend
+
+- FastAPI
+- SQLite
+- SQLAlchemy
+- Pydantic
+
+## Testing
+
+- pytest
+- pytest-asyncio
+- httpx
+- pytest-cov
+- pytest-html
+
+## Quality & CI
+
 - GitHub Actions
 - Black
 - Flake8
 
-### Language
+## Language
+
 - Python 3.11+
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 project2-task-api-project/
 ├── app/
+│   ├── routes/
+│   ├── schemas/
+│   ├── db.py
+│   ├── db_models.py
+│   └── main.py
 ├── docs/
-│   └── testing-strategy.md
+│   ├── testing-strategy.md
+│   └── testing-structure.md
 ├── tests/
 ├── .github/
 │   └── workflows/
@@ -123,187 +195,209 @@ project2-task-api-project/
 └── ...
 ```
 
-> Adjust the structure section if your local layout differs slightly.
-
 ---
 
-## Getting Started
+# Getting Started
 
-### 1. Clone the repository
+## 1. Clone the Repository
+
 ```bash
 git clone https://github.com/tnation1392/project2-task-api-project.git
 cd project2-task-api-project
 ```
 
-### 2. Create and activate a virtual environment
-**Windows (PowerShell)**
+## 2. Create and Activate a Virtual Environment
+
+### Windows (PowerShell)
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-**macOS / Linux**
+### macOS / Linux
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+## 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the API locally
-> Update the module path below if your app entry point differs.
+## 4. Run the API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-### 5. Open the API docs
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
-- OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
+## 5. Open the API Documentation
+
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+- OpenAPI Schema: http://127.0.0.1:8000/openapi.json
 
 ---
 
-## Running Tests
+# Running Tests
 
-### Run the full test suite
+## Run All Tests
+
 ```bash
 pytest -v
 ```
 
-### Run smoke tests only
+## Run Smoke Tests
+
 ```bash
 pytest -m smoke -v
 ```
 
-### Run regression tests only
+## Run Regression Tests
+
 ```bash
 pytest -m regression -v
 ```
 
-### Run tests with coverage
+## Run With Coverage
+
 ```bash
 pytest --cov=app --cov-report=term-missing
 ```
 
-### Generate an HTML report
+## Generate an HTML Test Report
+
 ```bash
 pytest --html=report.html --self-contained-html
 ```
 
 ---
 
-## CI Quality Gates
+# CI Quality Gates
 
 The GitHub Actions pipeline is configured to:
-- install dependencies
-- check formatting with Black
-- lint with Flake8
-- run the pytest suite
-- enforce coverage requirements
-- generate and upload HTML test artifacts
 
-This helps keep the project aligned with real-world QA automation and CI expectations.
+- Install dependencies
+- Check formatting with Black
+- Lint with Flake8
+- Run the pytest suite
+- Verify code coverage
+- Generate HTML test reports
+
+This helps keep the project aligned with real-world QA automation workflows and continuous integration practices.
 
 ---
 
-## Database
+# Database
 
-The application uses a local SQLite database for persistence.
+The application uses SQLite as its persistence layer and SQLAlchemy as its ORM.
 
-By default, the database file is created automatically when the application starts.
+## Database Responsibilities
+
+- User storage
+- Project ownership tracking
+- Task persistence
+- Resource relationships
+- Timestamp auditing
+
+## Benefits of Adding a Database
+
+- Data persists across application restarts
+- More realistic API behavior
+- Better validation of user ownership rules
+- Improved integration testing
+- Ability to test multi-step workflows
+
+Database tables are created automatically when the application starts.
 
 Example database file:
+
 ```text
 task_api.db
 ```
 
 ---
 
-## Docker Status
-
-Docker support was investigated as part of the project roadmap.
-
-### Current Local Limitation
-Local Docker validation is currently blocked in the current Windows work environment because:
-- Docker Desktop on Windows uses WSL 2 for the recommended per-user installation path
-- WSL is not available on the current machine
-- Administrative permissions are not available to enable/install the required backend
-
-### Project Impact
-This does **not** affect the API implementation or the automated test suite when running locally with Python and pytest.
-
-### Planned Follow-up
-Docker assets can be completed and validated later on:
-- a personal machine
-- an admin-enabled environment
-- or another environment where WSL 2 / Docker Desktop is available
-
----
-
-## Documentation
+# Documentation
 
 Additional documentation:
-- `docs/testing-strategy.md`
-- `docs/testing-structure.md`'
+
+- docs/testing-strategy.md
+- docs/testing-structure.md
 
 ---
 
-### OpenAPI Contract Testing
-The project includes OpenAPI contract validation tests against `/openapi.json` to help catch accidental contract regressions.
+# Completed Features
 
-Current contract checks include:
-- OpenAPI schema availability
-- OpenAPI version/schema sanity checks
-- Core published API paths
-- Expected HTTP methods for core resources
-- Security metadata for protected endpoints
-
----
-
-### Completed
-- Task state transition rules
-- Better validation rules
-- Test helpers / factories
-- Smoke / regression markers
-- Testing strategy document
-- SQLite migration / persistence
-- Timestamps / audit fields
-- Filtering
-- Pagination
+- SQLite persistence
+- SQLAlchemy ORM integration
+- User, Project, and Task models
+- CRUD operations
+- API key authentication
 - Role-based authorization
-- Black + Flake8 in CI
-- OpenAPI contract testing (paths + methods)
-
-### In Progress / Deferred
-- Docker support (blocked locally by environment restrictions)
-
----
-
-## Why This Project Matters for QA Automation
-
-This project is meant to demonstrate more than endpoint testing. It shows practical QA automation skills such as:
-- validating business rules
-- testing authorization boundaries
-- protecting API contracts
-- enforcing quality gates in CI
-- documenting test strategy clearly
+- Ownership validation
+- Timestamp fields
+- Filtering support
+- Pagination support
+- Task workflow/state transitions
+- OpenAPI contract tests
+- Smoke tests
+- Regression tests
+- Database-backed integration tests
+- Test helpers and fixtures
+- GitHub Actions CI
+- Black formatting checks
+- Flake8 linting
+- HTML test reports
 
 ---
 
-## Future Improvements
+# In Progress / Future Ideas
 
-Potential next improvements include:
-- deeper OpenAPI contract checks (security metadata, schema details)
-- Docker validation in an admin-enabled environment
-- additional reporting or test organization refinements
-- expanded negative and edge-case coverage where useful
+- PostgreSQL support
+- Alembic migrations
+- Docker validation
+- Expanded OpenAPI schema validation
+- Additional edge-case automation coverage
+- Enhanced reporting and dashboards
 
 ---
 
-## Author
+# Why I Built This Project
 
-Created as a QA automation portfolio project by **Todd Nason**.
+I created this project to strengthen both my backend development and QA automation skills.
+
+Rather than only testing existing applications, I wanted experience building an API, understanding how features are implemented, and then writing automated tests to verify those features.
+
+The project helped me gain experience with:
+
+- API development
+- Database integration
+- Automated testing
+- CI/CD workflows
+- Debugging real-world integration issues
+
+---
+
+# Key Learning Outcomes
+
+Some of the most valuable lessons from this project included:
+
+- Designing and testing REST APIs
+- Working with relational databases
+- Modeling relationships between resources
+- Writing maintainable automated tests
+- Building and validating OpenAPI contracts
+- Troubleshooting authentication and authorization issues
+- Debugging database-related failures
+- Keeping tests aligned with changing application behavior
+- Using CI pipelines to automate quality checks
+
+---
+
+# Author
+
+Created by **Todd Nason** as a QA Automation portfolio project.
