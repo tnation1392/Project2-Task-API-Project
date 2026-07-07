@@ -306,21 +306,6 @@ The application uses SQLite as its persistence layer and SQLAlchemy as its ORM.
 
 ---
 
-## Database Migrations
-
-The project uses Alembic for database schema versioning and migrations.
-
-Common commands:
-
-```bash
-alembic revision --autogenerate -m "description"
-alembic upgrade head
-alembic downgrade -1
-````
-
----
-
-
 ## Benefits of Adding a Database
 
 - Data persists across application restarts
@@ -328,8 +313,22 @@ alembic downgrade -1
 - Better validation of user ownership rules
 - Improved integration testing
 - Ability to test multi-step workflows
+- Supports database schema versioning through Alembic migrations
 
-Database tables are created automatically when the application starts.
+---
+
+## Database Management
+
+The application uses SQLite as its database and SQLAlchemy as its ORM.
+
+Database schema changes are managed using Alembic migrations, allowing the database structure to evolve without recreating the database or losing data.
+
+Common migration commands:
+
+```bash
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
 
 Example database file:
 
