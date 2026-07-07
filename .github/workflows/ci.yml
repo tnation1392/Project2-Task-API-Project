@@ -40,3 +40,7 @@ jobs:
         with:
           name: test-report
           path: report.html
+
+      - name: Run Schemathesis
+        run: |
+          schemathesis run http://127.0.0.1:8000/openapi.json

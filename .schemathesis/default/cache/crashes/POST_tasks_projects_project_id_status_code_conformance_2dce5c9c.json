@@ -1,0 +1,94 @@
+{
+  "operation": "POST /tasks/projects/{project_id}",
+  "method": "POST",
+  "path_template": "/tasks/projects/{project_id}",
+  "fingerprint": "2dce5c9c",
+  "case_id": "b2YQA6",
+  "code_sample": "curl -X POST -H 'Content-Type: application/json' -d '{\"title\": \"000\"}' http://127.0.0.1:8000/tasks/projects/0",
+  "sequence": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/tasks/projects/0",
+      "url_template": "http://127.0.0.1:8000/tasks/projects/{project_id}",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Schemathesis-TestCaseId": "b2YQA6",
+        "Content-Type": "application/json",
+        "Content-Length": "16"
+      },
+      "response": {
+        "status_code": 401,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:03 GMT",
+          "server": "uvicorn",
+          "content-length": "28",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"Missing API key\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 401\nDocumented: 201, 422"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 1.7499995010439306e-05,
+          "mode": "negative"
+        },
+        "components": {
+          "PATH": "positive",
+          "HEADER": "negative",
+          "BODY": "positive"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Missing `X-API-Key` at header",
+            "location": null,
+            "parameter": "X-API-Key",
+            "parameter_location": "HEADER",
+            "scenario": "missing_parameter"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [
+          [
+            "path",
+            "project_id"
+          ]
+        ],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {
+          "PATH": {
+            "project_id": "0"
+          },
+          "HEADER": {}
+        }
+      },
+      "path": "/tasks/projects/{project_id}",
+      "path_parameters": {
+        "project_id": "0"
+      },
+      "query": {},
+      "case_headers": {},
+      "cookies": {},
+      "case_body": {
+        "encoding": "json",
+        "value": {
+          "title": "000"
+        }
+      },
+      "media_type": "application/json",
+      "parent_index": null
+    }
+  ]
+}

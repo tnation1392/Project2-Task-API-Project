@@ -1,0 +1,93 @@
+{
+  "operation": "POST /projects/",
+  "method": "POST",
+  "path_template": "/projects/",
+  "fingerprint": "31edac81",
+  "case_id": "rKad5w",
+  "code_sample": "curl -X POST -H 'X-API-Key: [Filtered]' -H 'Content-Type: application/json' -d '\ufffd' http://127.0.0.1:8000/projects/",
+  "sequence": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/projects/",
+      "url_template": "http://127.0.0.1:8000/projects/",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-API-Key": "[Filtered]",
+        "X-Schemathesis-TestCaseId": "rKad5w",
+        "Content-Type": "application/json",
+        "Content-Length": "1"
+      },
+      "response": {
+        "status_code": 400,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:05 GMT",
+          "server": "uvicorn",
+          "content-length": "48",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"There was an error parsing the body\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 400\nDocumented: 201, 422"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 0.0014101000051596202,
+          "mode": "negative"
+        },
+        "components": {
+          "HEADER": "positive",
+          "BODY": "negative"
+        },
+        "phase": {
+          "name": "stateful",
+          "data": {
+            "type": "StatefulPhaseData",
+            "description": "Invalid syntax: random bytes",
+            "location": null,
+            "parameter": null,
+            "parameter_location": "BODY",
+            "mutations": [
+              {
+                "path": [],
+                "schema_pointer": "",
+                "channel": "schema",
+                "operator": "syntax_fuzzing",
+                "keywords": [],
+                "parameter": null,
+                "original_value": null,
+                "new_value": null
+              }
+            ]
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {}
+      },
+      "path": "/projects/",
+      "path_parameters": {},
+      "query": {},
+      "case_headers": {
+        "X-API-Key": "[Filtered]"
+      },
+      "cookies": {},
+      "case_body": {
+        "encoding": "base64",
+        "value": "2Q=="
+      },
+      "media_type": "application/json",
+      "parent_index": null
+    }
+  ]
+}

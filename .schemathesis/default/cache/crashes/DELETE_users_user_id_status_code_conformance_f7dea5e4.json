@@ -1,0 +1,93 @@
+{
+  "operation": "DELETE /users/{user_id}",
+  "method": "DELETE",
+  "path_template": "/users/{user_id}",
+  "fingerprint": "f7dea5e4",
+  "case_id": "7XPS7S",
+  "code_sample": "curl -X DELETE http://127.0.0.1:8000/users/79878e92-d4e1-4f95-8a3c-06626da1e071",
+  "sequence": [
+    {
+      "method": "DELETE",
+      "url": "http://127.0.0.1:8000/users/79878e92-d4e1-4f95-8a3c-06626da1e071",
+      "url_template": "http://127.0.0.1:8000/users/{user_id}",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Schemathesis-TestCaseId": "7XPS7S",
+        "Content-Length": "0"
+      },
+      "response": {
+        "status_code": 401,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:03 GMT",
+          "server": "uvicorn",
+          "content-length": "28",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"Missing API key\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 401\nDocumented: 204, 422"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 6.900000153109431e-05,
+          "mode": "negative"
+        },
+        "components": {
+          "PATH": "positive",
+          "HEADER": "negative"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Missing `X-API-Key` at header",
+            "location": null,
+            "parameter": "X-API-Key",
+            "parameter_location": "HEADER",
+            "scenario": "missing_parameter"
+          }
+        },
+        "pool_draws": [
+          {
+            "location": "path",
+            "parameter_name": "user_id",
+            "resource_name": "UserResponse",
+            "resource_field": "id",
+            "source_operation": "POST /users/",
+            "source_status": 201
+          }
+        ],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {
+          "PATH": {
+            "user_id": "79878e92-d4e1-4f95-8a3c-06626da1e071"
+          },
+          "HEADER": {}
+        }
+      },
+      "path": "/users/{user_id}",
+      "path_parameters": {
+        "user_id": "79878e92-d4e1-4f95-8a3c-06626da1e071"
+      },
+      "query": {},
+      "case_headers": {},
+      "cookies": {},
+      "case_body": {
+        "encoding": "none"
+      },
+      "media_type": null,
+      "parent_index": null
+    }
+  ]
+}

@@ -161,6 +161,7 @@ These tests help detect accidental API contract changes before they are merged.
 - httpx
 - pytest-cov
 - pytest-html
+- Schemathesis (OpenAPI-driven fuzz testing)
 
 ## Quality & CI
 
@@ -352,6 +353,7 @@ Additional documentation:
 - Black formatting checks
 - Flake8 linting
 - HTML test reports
+- Schemathesis
 
 ---
 
@@ -395,6 +397,9 @@ Some of the most valuable lessons from this project included:
 - Debugging database-related failures
 - Keeping tests aligned with changing application behavior
 - Using CI pipelines to automate quality checks
+- Exploring OpenAPI-driven fuzz testing with Schemathesis
+- Learning how automatically generated API tests can identify validation and authentication edge cases
+- Understanding the relationship between API contracts and automated test generation
 
 ---
 

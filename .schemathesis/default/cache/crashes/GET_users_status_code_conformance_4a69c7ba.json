@@ -1,0 +1,77 @@
+{
+  "operation": "GET /users/",
+  "method": "GET",
+  "path_template": "/users/",
+  "fingerprint": "4a69c7ba",
+  "case_id": "N6csx2",
+  "code_sample": "curl -X GET http://127.0.0.1:8000/users/",
+  "sequence": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:8000/users/",
+      "url_template": "http://127.0.0.1:8000/users/",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Schemathesis-TestCaseId": "N6csx2"
+      },
+      "response": {
+        "status_code": 401,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:02 GMT",
+          "server": "uvicorn",
+          "content-length": "28",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"Missing API key\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 401\nDocumented: 200"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 1.6400001186411828e-05,
+          "mode": "negative"
+        },
+        "components": {
+          "HEADER": "negative"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Missing `X-API-Key` at header",
+            "location": null,
+            "parameter": "X-API-Key",
+            "parameter_location": "HEADER",
+            "scenario": "missing_parameter"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {
+          "HEADER": {}
+        }
+      },
+      "path": "/users/",
+      "path_parameters": {},
+      "query": {},
+      "case_headers": {},
+      "cookies": {},
+      "case_body": {
+        "encoding": "none"
+      },
+      "media_type": null,
+      "parent_index": null
+    }
+  ]
+}

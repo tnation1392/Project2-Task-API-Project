@@ -1,0 +1,83 @@
+{
+  "operation": "POST /projects/",
+  "method": "POST",
+  "path_template": "/projects/",
+  "fingerprint": "fafa7489",
+  "case_id": "NUyDEt",
+  "code_sample": "curl -X POST -H 'Content-Type: application/json' -d '{\"name\": \"000\"}' http://127.0.0.1:8000/projects/",
+  "sequence": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/projects/",
+      "url_template": "http://127.0.0.1:8000/projects/",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Schemathesis-TestCaseId": "NUyDEt",
+        "Content-Type": "application/json",
+        "Content-Length": "15"
+      },
+      "response": {
+        "status_code": 401,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:02 GMT",
+          "server": "uvicorn",
+          "content-length": "28",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"Missing API key\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 401\nDocumented: 201, 422"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 1.2800002878066152e-05,
+          "mode": "negative"
+        },
+        "components": {
+          "HEADER": "negative",
+          "BODY": "positive"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Missing `X-API-Key` at header",
+            "location": null,
+            "parameter": "X-API-Key",
+            "parameter_location": "HEADER",
+            "scenario": "missing_parameter"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {
+          "HEADER": {}
+        }
+      },
+      "path": "/projects/",
+      "path_parameters": {},
+      "query": {},
+      "case_headers": {},
+      "cookies": {},
+      "case_body": {
+        "encoding": "json",
+        "value": {
+          "name": "000"
+        }
+      },
+      "media_type": "application/json",
+      "parent_index": null
+    }
+  ]
+}

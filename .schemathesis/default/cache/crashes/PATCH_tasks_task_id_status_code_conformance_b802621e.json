@@ -1,0 +1,98 @@
+{
+  "operation": "PATCH /tasks/{task_id}",
+  "method": "PATCH",
+  "path_template": "/tasks/{task_id}",
+  "fingerprint": "b802621e",
+  "case_id": "dnbNJV",
+  "code_sample": "curl -X PATCH -H 'Content-Type: application/json' -d '{\"status\": \"done\"}' http://127.0.0.1:8000/tasks/0",
+  "sequence": [
+    {
+      "method": "PATCH",
+      "url": "http://127.0.0.1:8000/tasks/0",
+      "url_template": "http://127.0.0.1:8000/tasks/{task_id}",
+      "headers": {
+        "User-Agent": "schemathesis/4.22.3",
+        "Accept-Encoding": "gzip, deflate, zstd",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Schemathesis-TestCaseId": "dnbNJV",
+        "Content-Type": "application/json",
+        "Content-Length": "18"
+      },
+      "response": {
+        "status_code": 401,
+        "headers": {
+          "date": "Tue, 07 Jul 2026 17:46:03 GMT",
+          "server": "uvicorn",
+          "content-length": "28",
+          "content-type": "application/json"
+        },
+        "body": "{\"detail\":\"Missing API key\"}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "status_code_conformance",
+          "status": "failure",
+          "message": "Undocumented HTTP status code\n\nReceived: 401\nDocumented: 200, 422"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 1.8600003386382014e-05,
+          "mode": "negative"
+        },
+        "components": {
+          "PATH": "positive",
+          "HEADER": "negative",
+          "BODY": "positive"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Missing `X-API-Key` at header",
+            "location": null,
+            "parameter": "X-API-Key",
+            "parameter_location": "HEADER",
+            "scenario": "missing_parameter"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [
+          [
+            "path",
+            "task_id"
+          ],
+          [
+            "body",
+            "status"
+          ]
+        ],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "raw_containers": {
+          "PATH": {
+            "task_id": "0"
+          },
+          "HEADER": {}
+        }
+      },
+      "path": "/tasks/{task_id}",
+      "path_parameters": {
+        "task_id": "0"
+      },
+      "query": {},
+      "case_headers": {},
+      "cookies": {},
+      "case_body": {
+        "encoding": "json",
+        "value": {
+          "status": "done"
+        }
+      },
+      "media_type": "application/json",
+      "parent_index": null
+    }
+  ]
+}
