@@ -4,8 +4,6 @@ from app.routes.projects import router as projects_router
 from app.routes.tasks import router as tasks_router
 from app.db import Base, engine
 
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
 app.include_router(users_router)

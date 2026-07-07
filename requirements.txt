@@ -10,3 +10,4 @@ pytest-html
 black
 flake8
 schemathesis
+alembic
