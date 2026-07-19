@@ -373,6 +373,44 @@ Additional documentation:
 
 ---
 
+# Agile / Jira Workflow Simulation
+
+To practice Agile processes, GitHub Issues, Projects, Pull Requests, and Labels are used to simulate a Jira workflow.
+
+## Workflow
+
+Backlog
+↓
+In Progress
+↓
+Code Review
+↓
+QA Testing
+↓
+Done
+
+## Example User Stories
+
+- TASK-101: Create New Task via API
+- TASK-102: Update Existing Task via API
+- TASK-103: Delete Task via API
+
+## Example Defects
+
+- BUG-001: Missing Title Causes 500 Error
+- BUG-002: Invalid Task ID Returns Incorrect Status Code
+
+## QA Activities
+
+- Test case design
+- Test execution
+- Bug reporting
+- Defect retesting
+- Regression testing
+- Sprint board management
+
+---
+
 # In Progress / Future Ideas
 
 - PostgreSQL support
@@ -397,6 +435,9 @@ The project helped me gain experience with:
 - Automated testing
 - CI/CD workflows
 - Debugging real-world integration issues
+- Git Workflow
+- Pull Requests
+- QA Documentation
 
 ---
 
@@ -418,7 +459,3 @@ Some of the most valuable lessons from this project included:
 - Understanding the relationship between API contracts and automated test generation
 
 ---
-
-# Author
-
-Created by **Todd Nason** as a QA Automation portfolio project.
