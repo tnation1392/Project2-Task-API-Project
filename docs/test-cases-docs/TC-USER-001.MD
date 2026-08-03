@@ -1,12 +1,11 @@
 # ID: TC-USER-001
-## test_user_lifecycle
+## test_create_user
 
 ---
 
 ## Objective: 
 
-Tests that a user can be created and retrieved from the user
-list, then deleted and is no longer accessible after deletion
+Tests that a user can be created and retrieved via JSON
 
 ---
 
@@ -15,32 +14,29 @@ list, then deleted and is no longer accessible after deletion
 - API server is running
 - Database is available
 - Test user doesn't exist yet
-- Authentication works correctly
 
 ---
 
 ## Testing Steps
 
-1. Create a new user called "Lifecycle User"
-2. Generate auth headers for the user
-3. Send a GET request to /users/.
-4. Verify that the response code is 200
-5. Verify the user is returned in the users list
-6. Send a DELETE request to /users/{id}
-7. Verify the response code is 204 No Content
-8. Send a GET request to /users/{id} for the deleted user
-9. Verify the response code is 401 Unauthorized
+1. Send a POST request to /users/
+2. Include the payload:
+{
+  "name": "Todd"
+}
+3. Submit request
+4. Review the response body and see that the response
+code is 201 Created
 
 ---
 
 ## Expected Results
 
 - User is created
-- User appears in the user list
-- Delete operation succeeds
-- Deleted user cannot be accessed
-- API returns a 401 Unauthorized when trying to retrieve
-the deleted user
+- Response code is 201 Created
+- Response contains "Todd"
+- Response contains an api_key field
+- Both id and api_key are returned as strings
 
 ---
 

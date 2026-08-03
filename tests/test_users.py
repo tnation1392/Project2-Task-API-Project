@@ -47,7 +47,7 @@ async def test_get_users_success(client, auth_headers):
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
-
+#TC-USER-006
 @pytest.mark.asyncio
 @pytest.mark.regression
 async def test_user_lifecycle(client):
