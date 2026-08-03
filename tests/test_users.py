@@ -17,6 +17,7 @@ async def test_create_user(client):
     assert isinstance(data["api_key"], str)
 
 
+# TC-USER-002
 @pytest.mark.asyncio
 async def test_create_user_invalid_name(client):
     response = await client.post("/users/", json={"name": "To"})
