@@ -2,6 +2,7 @@ import pytest
 from tests.helpers import create_user, build_auth_headers
 
 
+# TC-USER-001
 @pytest.mark.asyncio
 @pytest.mark.smoke
 async def test_create_user(client):
@@ -47,7 +48,8 @@ async def test_get_users_success(client, auth_headers):
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
-#TC-USER-006
+
+# TC-USER-006
 @pytest.mark.asyncio
 @pytest.mark.regression
 async def test_user_lifecycle(client):

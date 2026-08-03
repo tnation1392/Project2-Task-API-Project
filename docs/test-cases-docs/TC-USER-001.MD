@@ -50,3 +50,5 @@ TBD
 - Functional
 - Integral
 - E2E
+- Positive test
+- Smoke
