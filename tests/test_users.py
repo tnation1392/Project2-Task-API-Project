@@ -43,6 +43,7 @@ async def test_get_users_requires_auth(client):
     assert response.status_code == 401
 
 
+# TC-USER-005
 @pytest.mark.asyncio
 @pytest.mark.smoke
 async def test_get_users_success(client, auth_headers):
@@ -72,6 +73,7 @@ async def test_user_lifecycle(client):
     assert get_res.status_code == 401
 
 
+# TC-USER-007
 @pytest.mark.asyncio
 @pytest.mark.regression
 async def test_invalid_api_key(client):
