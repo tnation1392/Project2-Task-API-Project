@@ -25,6 +25,7 @@ async def test_create_user_invalid_name(client):
     assert response.status_code == 422
 
 
+# TC-USER-003
 @pytest.mark.asyncio
 @pytest.mark.regression
 @pytest.mark.parametrize("invalid_name", ["To", "", "a" * 100])
@@ -34,6 +35,7 @@ async def test_create_user_invalid_inputs(client, invalid_name):
     assert response.status_code == 422
 
 
+# TC-USER-004
 @pytest.mark.asyncio
 async def test_get_users_requires_auth(client):
     response = await client.get("/users/")
