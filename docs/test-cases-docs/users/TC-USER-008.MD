@@ -1,11 +1,11 @@
-# ID: TC-USER-007
-## test_invalid_api_key
+# ID: TC-USER-008
+## test_missing_api_key
 
 ---
 
 ## Objective: 
 
-Tests that the GET request for /users/ with an invalid API Key will draw 
+Verifies that the GET request for /users/ with an missing API Key will draw 
 a response code of 401 Unauthorized
 
 ---
@@ -20,7 +20,7 @@ a response code of 401 Unauthorized
 ## Testing Steps
 
 1. Send a GET request to /users/
-2. Include an invalid API Key {"x-api-key: "fake_key"}
+2. Do not include an API key in the request
 3. Submit the request
 4. Review that the response code is 401 Unauthorized
 
@@ -28,7 +28,7 @@ a response code of 401 Unauthorized
 
 ## Expected Results
 
-- Request Code 401 Unauthorized
+ - Request code 401 Unauthorized
 
 ---
 
