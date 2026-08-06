@@ -3,6 +3,7 @@ from tests.helpers import create_user, build_auth_headers, create_project
 from datetime import datetime
 
 
+# TC-PROJ-001
 @pytest.mark.asyncio
 @pytest.mark.smoke
 async def test_create_project(client, auth_headers):
@@ -19,6 +20,7 @@ async def test_create_project(client, auth_headers):
     assert "owner_id" in data
 
 
+# TC-PROJ-002
 @pytest.mark.asyncio
 @pytest.mark.smoke
 async def test_get_projects_returns_only_user_projects(client, auth_user, auth_headers):
